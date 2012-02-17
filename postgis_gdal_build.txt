@@ -1,6 +1,9 @@
 ###############################################################
 # Install Solaris
 
+# Patch Solaris 10u9 up to the latest (see the "patching"
+# directory.
+
 # Add non-root user
   useradd -d /export/home/user -k /etc/skel -m user
 
@@ -231,8 +234,8 @@ CC="gcc -m64" CXX="g++ -m64" ./configure \
    --with-pg=/usr/postgres/opengeo-8.4/bin/64/pg_config 
 
 #   --with-curl=/usr/postgres/opengeo-8.4/bin/64/curl-config \
-# edit GDALmake.opt, uncomment SHELL variable
 
+# edit GDALmake.opt, uncomment SHELL variable
 # edit GDALmake.opt change /usr/sfw/lib to /usr/sfw/lib/64
 
   make clean all install
@@ -241,9 +244,15 @@ CC="gcc -m64" CXX="g++ -m64" ./configure \
 ###############################################################
 # Reset RPATH to $ORIGIN/../../lib/64 to allow relocation of
 # binaries
+#
+# NOTE NOTE NOTE!!!
+# This only works for Solaris 10u10 and up
+# For older versions, use the crle system-wide setting of 
+# library search paths at the bottom of these directions
 
 # Get rpath
 wget http://blogs.sun.com/ali/resource/rpath.tgz
+# untar and build it
 
 # 32 bit lib
 find /usr/postgres/opengeo-8.4/bin -type f -exec ./rpath {} /lib:/usr/lib:/usr/sfw/lib:\$ORIGIN/../lib ';'
@@ -283,7 +292,6 @@ psql -U postgres -d template_postgis -c "update pg_database set datistemplate = 
 ###############################################################
 # Install Script Notes
 
-
 # Check kernel parameters
 prctl -i project user.postgres
 if $? != 0 then we need to add a user.postgres project
@@ -307,12 +315,11 @@ install-opengeo-postgis \
 
 ###############################################################
 # CRLE
+# can be used to set the library paths system-wide. 
+# For Solaris 10u10 and up, use the rpath re-write trick
+# above.
 
 crle -u -l /usr/postgres/opengeo-8.4/lib
 crle -64 -u -l /usr/postgres/opengeo-8.4/lib/64
-
-
-make SFM optional?
-
 
 
