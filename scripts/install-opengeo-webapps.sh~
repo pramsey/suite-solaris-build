@@ -344,9 +344,6 @@ else
   checkrv $? "zip -fmrD $TempDir/geoexplorer.war $TempDir/geoexplorer/"
 fi
 
-read -p "GeoExplorer ..."
-exit
-
 log "** Custom GeoServer Log and/or Data Dir"
 
 # if we need to do some GeoServer param customizations, upack the WAR

@@ -119,10 +119,8 @@ shared_buffer="$shmax$shmax_units"
 log "Using $shared_buffer as shared_buffer size for PostgreSQL"
 
 # Check suitability of the data directory
-#uid=`getfacl $db_path | grep owner | cut -f2 -d: | tr -d ' '` 
-#gid=`getfacl $db_path | grep group | cut -f2 -d: | tr -d ' '`
-uid=`ls -al . | head -n2 | tail -n1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
-gid=`ls -al . | head -n2 | tail -n1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
+uid=`getfacl $db_path | grep owner | cut -f2 -d: | tr -d ' '` 
+gid=`getfacl $db_path | grep group | cut -f2 -d: | tr -d ' '`
 if [ "$uid" != "postgres" ] || [ "$gid" != "postgres" ]; then
   quit "Database directory '$db_path' must be owned by 'postgres' user and group. Run this command: chown postgres:postgres $db_path"
 else
