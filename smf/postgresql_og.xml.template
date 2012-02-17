@@ -4,7 +4,7 @@
  Copyright 2008 Sun Microsystems, Inc.  All rights reserved.
  Use is subject to license terms.
 
- ident	"@(#)postgresql_og84.xml	1.1	08/04/30 SMI"
+ ident	"@(#)postgresql_og.xml	1.1	08/04/30 SMI"
 
         NOTE:  This service manifest is not editable; its contents will
         be overwritten by package or patch operations, including
@@ -12,10 +12,10 @@
         file.
 -->
 
-<service_bundle type='manifest' name='postgresql_ox84'>
+<service_bundle type='manifest' name='postgresql_ox'>
 
 <service
-        name='application/database/postgresql_og84'
+        name='application/database/postgresql_og'
         type='service'
         version='1'>
 
@@ -44,19 +44,19 @@
         <exec_method
                 type='method'
                 name='start'
-                exec='/lib/svc/method/postgres_og84 start'
+                exec='/lib/svc/method/postgres_og start'
                 timeout_seconds='60' />
 
         <exec_method
                 type='method'
                 name='stop'
-                exec='/lib/svc/method/postgres_og84 stop'
+                exec='/lib/svc/method/postgres_og stop'
                 timeout_seconds='60' />
 
         <exec_method
                 type='method'
                 name='refresh'
-                exec='/lib/svc/method/postgres_og84 refresh'
+                exec='/lib/svc/method/postgres_og refresh'
                 timeout_seconds='60' />
 
         <!--
@@ -71,11 +71,7 @@
 			value='solaris.smf.manage.postgres' />
         </property_group>
 
-        <!--
-          We define 2 instances of PostgreSQL 8.4 as examples (32 & 64 bit).
-        -->
-
-        <instance name='default_32bit' enabled='false'>
+        <instance name='default' enabled='false'>
 
         	<method_context>
                 	<method_credential user='postgres' group='postgres' />
@@ -86,35 +82,11 @@
 		   appropriate database directory and port number in 
 		   postgresql.conf is different than the other instances.
 		-->
-        	<property_group name='postgresql_og84' type='application'>
+        	<property_group name='postgresql_og' type='application'>
                 	<propval name='bin' type='astring'
                     	   value='@bin@' />
                 	<propval name='data' type='astring'
                     	   value='@data@' />
-                	<propval name='log' type='astring'
-			   value='server.log' />
-			<propval name='value_authorization' type='astring'
-			   value='solaris.smf.value.postgres' />
-        	</property_group>
-
-        </instance>
-
-        <instance name='default_64bit' enabled='false'>
-
-        	<method_context>
-                	<method_credential user='postgres' group='postgres' />
-        	</method_context>
-
-		<!-- 
-		   Make sure the data configurable property points to the
-		   appropriate database directory and port number in 
-		   postgresql.conf is different than the other instances.
-		-->
-        	<property_group name='postgresql_og84' type='application'>
-                	<propval name='bin' type='astring'
-                    	   value='/usr/postgres/opengeo-8.4/bin/64' />
-                	<propval name='data' type='astring'
-                    	   value='/var/postgres/opengeo-8.4_64' />
                 	<propval name='log' type='astring'
 			   value='server.log' />
 			<propval name='value_authorization' type='astring'
@@ -132,9 +104,9 @@
                         </loctext>
                 </common_name>
                 <documentation>
-                        <manpage title='postgres_og84' section='5' />
+                        <manpage title='postgres_og' section='5' />
                         <doc_link name='postgresql.org'
-                                uri='http://postgresql.org' />
+                                uri='http://postgresql.org/docs/8.4/' />
                 </documentation>
         </template>
 

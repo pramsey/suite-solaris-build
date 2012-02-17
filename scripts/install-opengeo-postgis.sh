@@ -141,14 +141,14 @@ $gtar -xf $pkg -C $install_path
 checkrv $? "$gtar -xf $pkg -C $install_path"
 
 # Install the SMF start script
-svc_name=postgresql_og84
-svc_script_name=postgres_og84
+svc_name=postgresql_og
+svc_script_name=postgres_og
 svc_script_loc=/lib/svc/method/$svc_script_name
 svc_script_template=$install_path/$pg_version/etc/smf/$svc_script_name
 svc_manifest_xml=${svc_name}.xml
 svc_manifest_loc=/var/svc/manifest/application/database/$svc_manifest_xml
 svc_manifest_template=$install_path/$pg_version/etc/smf/${svc_manifest_xml}.template
-bin_path=$install_path/$pg_version/bin
+bin_path=$install_path/$pg_version/bin/64
 data_path=$db_path/$pg_version
 if [ ! -f $svc_script_template ]; then
   quit "Cannot find SMF start script template '$svc_script_template'"
@@ -172,10 +172,9 @@ sed s,@bin@,$bin_path, $svc_manifest_template | \
   $svc_manifest_loc
 log "Installed $svc_manifest_loc"
 
-# Install the manifest
-/usr/sbin/svccfg import $svc_manifest_loc
-checkrv $? "/usr/sbin/svccfg import $svc_manifest_loc"
-log "Enabled $svc_manifest_loc"
+# Add the install library locations to the system library path
+/usr/bin/crle -u -l $install_path/$pg_version/lib
+/usr/bin/crle -64 -u -l $install_path/$pg_version/lib/64
 
 # Log results out
 log "PostgreSQL/PostGIS installed"

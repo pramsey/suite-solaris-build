@@ -109,8 +109,8 @@
     --with-pam \
     --with-openssl \
     --with-libxml \
-    --with-libxslt \
     --enable-nls \
+    --with-libxslt \
     --with-includes="/usr/sfw/include /usr/postgres/opengeo-8.4/include" \
     --with-libraries="/usr/sfw/lib /usr/postgres/opengeo-8.4/lib" \
   && make clean all \
