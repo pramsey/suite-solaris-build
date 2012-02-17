@@ -7,8 +7,9 @@ log_file=$3
 verbose=1
 pg_version=opengeo-8.4
 
-pkg_dir=`dirname $0`
-pkg="$pkg_dir/pkg/opengeo-pgsql.tar"
+installer_dir=`dirname $0`
+resources_dir="$installer_dir/resources"
+pkg="$resources_dir/opengeo-pgsql.tar.gz"
 
 id=`id | grep id=0`
 
@@ -137,17 +138,17 @@ if [ -d $install_path/$pg_version ]; then
   quit "There is already software installed at $install_path/$pg_version"
 fi
 log "Untaring $pkg to $install_path"
-$gtar -xf $pkg -C $install_path 
-checkrv $? "$gtar -xf $pkg -C $install_path"
+$gtar -xfz $pkg -C $install_path 
+checkrv $? "$gtar -xfz $pkg -C $install_path"
 
 # Install the SMF start script
 svc_name=postgresql_og
 svc_script_name=postgres_og
 svc_script_loc=/lib/svc/method/$svc_script_name
-svc_script_template=$install_path/$pg_version/etc/smf/$svc_script_name
+svc_script_template=$resources_dir/$svc_script_name
 svc_manifest_xml=${svc_name}.xml
 svc_manifest_loc=/var/svc/manifest/application/database/$svc_manifest_xml
-svc_manifest_template=$install_path/$pg_version/etc/smf/${svc_manifest_xml}.template
+svc_manifest_template=$resources_dir/${svc_manifest_xml}.template
 bin_path=$install_path/$pg_version/bin/64
 data_path=$db_path/$pg_version
 if [ ! -f $svc_script_template ]; then
