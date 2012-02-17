@@ -1,5 +1,8 @@
 #!/bin/bash
 
+rm -R /tmp/opengeo-suite-temp/*
+read -p "Clear?..."
+
 # TODO (General)
 # - Replace getfacl for storage on ZFS
 # - Make log output(s) & terminology consistent
@@ -326,26 +329,27 @@ else
   log "Found Zip/UnZip where we expected it ($ZipPath & $UnZipPath)"
 fi
 
+match="/"
+replace="\/"
+
 log "** Custom GeoExplorerDataDir"
 if [ $GeoExplorerDataDir == 0 ]; then
   log "Nothing to do ... Using default GeoExplorerDataDir."
 else
   log "Unpacking GeoExplorer WAR for custom configs"  
-  unzip $TempDir/geoexplorer.war /WEB-INF/web.xml -d $TempDir/geoexplorer/
+  unzip $TempDir/geoexplorer.war WEB-INF/web.xml -d $TempDir/geoexplorer/
   checkrv $? "unzip $TempDir/geoexplorer.war /WEB-INF/web.xml -d $TempDir/geoexplorer/"
+  read -p "GeoExplorerUnzip ..."
   log "Writing custom GeoExplorer DataDir to template configuration file"
-  oldvalue="<!--CustomGeoExplorerDataDir-->"
-  newvalue="<param-name>GEOEXPLORER_DATA</param-name><param-value>$GeoExplorerDataDir</param-value>"
-  sed -i 's/$oldvalue/$newvalue/g' $TempDir/geoexplorer/WEB-INF/web.xml
-  checkrv $? "sed -i 's/$oldvalue/$newvalue/g' $TempDir/geoexplorer/WEB-INF/web.xml"
-  push ./geoexplorer
-  zip -fmrD $TempDir/geoexplorer.war $TempDir/geoexplorer/
-  pop
+  oldvalue="<!--CustomGeoExplorerDataDir-->" 
+  newvalue="<DOUGLAS>${GeoExplorerDataDir//$match/$replace}<\/DOUGLAS>"
+  sed -i s/"$oldvalue"/"$newvalue"/g $TempDir/geoexplorer/WEB-INF/web.xml
+  #checkrv $? "sed -i 's/$oldvalue/$newvalue/g' $TempDir/geoexplorer/WEB-INF/web.xml"
+read -p "GeoExplorerSED ..."
+exit
+  zip -fmrD $TempDir/geoexplorer.war $TempDir/geoexplorer/WEB-INF/web.xml
   checkrv $? "zip -fmrD $TempDir/geoexplorer.war $TempDir/geoexplorer/"
 fi
-
-read -p "GeoExplorer ..."
-exit
 
 log "** Custom GeoServer Log and/or Data Dir"
 
