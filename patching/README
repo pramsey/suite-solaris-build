@@ -1,0 +1,16 @@
+For compatibility, start with Solaris 10u9, and then patch forward using the 
+PCA utility.
+
+PCA automates the process of downloading and applying patches in Solaris, 
+which is a good thing, because patching is f-awful.
+
+
+1- Install PCA from http://www.par.univie.ac.at/solaris/pca/
+2- Make a directory called 'patches' to stage the downloaded patch files.
+3- Check that you have a current patch list (patch_list_events) from
+   the client.
+
+   ./pca --user=<oracle_account> --passwd=<oracle_pwd> \
+         --patchdir ./patches --download patch_list_events_2.1
+
+4- Watch it run.
