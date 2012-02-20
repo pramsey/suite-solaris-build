@@ -5,8 +5,10 @@
 # - Make log output(s) & terminology consistent
 # - Usage
 # - Action (Eventual hook for the install type: New, Upgrade, Repair, etc.)
-# root-relative path names
-# handle template datapacks in standard directory (in place before war is deployed)
+# - root-relative path names
+# - handle template data packs in standard directory (in place before war is deployed)
+# - confirm optional directories exist if options are specified
+# - (Re)start Glassfish domain SMF
 
 # ============================================================
 # Script Options / Defaults
@@ -34,7 +36,7 @@
 
   dJNDIConnRef="jndi/conn/ref/yo"
 
-  dGlassfishUser="dcuser"
+  dGlassfishUser="ssmith"
 
 # ============================================================
 # Script Subroutines
@@ -428,13 +430,13 @@ fi
 # [[[]]] TODO iterate this ???
 
 # GeoExplorer Data Dir
-if [ "$GeoExplorerDataDir" != "0" ]; then  
- uid=`getfacl $GeoExplorerDataDir | grep owner | cut -f2 -d: | tr -d ' '` 
- gid=`getfacl $GeoExplorerDataDir | grep group | cut -f2 -d: | tr -d ' '`
- if [ "$uid" != "$GlassfishUser" ] || [ "$gid" != "$GlassfishUser" ]; then
+if [ "$GeoExplorerDataDir" != "0" ]; then
+  uid=`ls -al $GeoExplorerDataDir | head -n2 | tail -n1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
+  gid=`ls -al $GeoExplorerDataDir | head -n2 | tail -n1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
+  if [ "$uid" != "$GlassfishUser" ] || [ "$gid" != "$GlassfishUser" ]; then
     log "Setting permissions on GeoExplorerDataDir"
-    chown $GlassfishUser:$GlassfishUser $GeoExplorerDataDir
-    checkrv $? "chown $GlassfishUser:$GlassfishUser $GeoExplorerDataDir"
+    chown -hR $GlassfishUser:$GlassfishUser $GeoExplorerDataDir
+    checkrv $? "chown -hR $GlassfishUser:$GlassfishUser $GeoExplorerDataDir"
   else
     log "'$GeoExplorerDataDir' is owned by '$GlassfishUser$GlassfishUser'"
   fi
@@ -442,8 +444,8 @@ fi
 
 # GeoServer Data Dir
 if [ "$GeoServerDataDir" != "0" ]; then  
-  uid=`getfacl $GeoServerDataDir | grep owner | cut -f2 -d: | tr -d ' '` 
-  gid=`getfacl $GeoServerDataDir | grep group | cut -f2 -d: | tr -d ' '`
+  uid=`ls -al $GeoServerDataDir | head -n2 | tail -n1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
+  gid=`ls -al $GeoServerDataDir | head -n2 | tail -n1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
   if [ "$uid" != "$GlassfishUser" ] || [ "$gid" != "$GlassfishUser" ]; then
     log "Setting permissions on GeoServerDataDir"
     chown -hR $GlassfishUser:$GlassfishUser $GeoServerDataDir
@@ -455,8 +457,8 @@ fi
 
 # GeoServer Log Dir
 if [ "$GeoServerLogDir" != "0" ]; then  
-  uid=`getfacl $GeoServerLogDir | grep owner | cut -f2 -d: | tr -d ' '` 
-  gid=`getfacl $GeoServerLogDir | grep group | cut -f2 -d: | tr -d ' '`
+  uid=`ls -al $GeoServerLogDir | head -n2 | tail -n1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
+  gid=`ls -al $GeoServerLogDir | head -n2 | tail -n1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
   if [ "$uid" != "$GlassfishUser" ] || [ "$gid" != "$GlassfishUser" ]; then
     log "Setting permissions on GeoServerLogDir"
     chown -hR $GlassfishUser:$GlassfishUser $GeoServerLogDir
@@ -477,6 +479,4 @@ cp $TempDir/geoserver.war $TargetDir
 checkrv $? "cp $TempDir/geoserver.war $TargetDir"
 
 # (Re)start Glassfish domain SMF
-# Don't need to do this 
-
-echo ""
+# Confirm that we need to do this ...?
