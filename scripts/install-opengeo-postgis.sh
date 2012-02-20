@@ -1,9 +1,5 @@
 #!/bin/bash
 
-install_path=$1
-db_path=$2
-log_file=$3
-
 verbose=1
 pg_version=opengeo-8.4
 
@@ -16,12 +12,12 @@ id=`id | grep id=0`
 gtar=/usr/sfw/bin/gtar
 
 usage() {
-  echo "usage: $0 /install/path /db/path [/install/log/file]"
+  echo "usage: $0 -I /install/path -D /db/path [-L /install/log/file]"
   echo ""
   echo "   Standard Solaris install location is /usr/postgres and db location"
   echo "   is /var/postgres. Recommended install command:"
   echo ""
-  echo "      $0 /usr/postgres /var/postgres"
+  echo "      $0 -I /usr/postgres -D /var/postgres"
   echo ""
 }
 
@@ -46,7 +42,17 @@ checkrv() {
 }
 
 # Check commandline parameters
-if [ "x" == "x$install_path" ] || [ "x" == "x$db_path" ]; then
+while getopts I:D:L: opt
+do
+  case "$opt" in 
+    I) install_path=$OPTARG;;
+    D) db_path=$OPTARG;;
+    L) log_file=$OPTARG;;
+    *) usage;;
+  esac
+done
+
+if [ ! -n "$install_path" ] || [ ! -n "$db_path" ]; then
   usage
   exit 1
 fi
