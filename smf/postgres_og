@@ -3,7 +3,7 @@
 # Copyright 2008 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"@(#)postgres_og84	1.1	08/04/30 SMI"
+#ident	"@(#)postgres_og	1.1	08/04/30 SMI"
 
 . /lib/svc/share/smf_include.sh
 
@@ -19,13 +19,13 @@ check_data_dir() {
 	if [ ! -d $PGDATA ]; then
                 /bin/mkdir $PGDATA
 		if [ ! -d $PGDATA ]; then
-			echo "Error: postgresql_og84/data directory $PGDATA does not exist and could not be created"
+			echo "Error: postgresql_og/data directory $PGDATA does not exist and could not be created"
 			exit $SMF_EXIT_ERR_CONFIG
 		fi
 	fi
 
 	if [ ! -w $PGDATA ]; then
-		echo "Error: postgresql_og84/data directory $PGDATA is not writable by postgres"
+		echo "Error: postgresql_og/data directory $PGDATA is not writable by postgres"
 		exit $SMF_EXIT_ERR_CONFIG
 	fi
 
@@ -33,7 +33,7 @@ check_data_dir() {
 		# If the directory is empty we can create the database files
 		# on behalf of the user using initdb
 		if [ `ls -a $PGDATA | wc -w` -le 2 ]; then
-			echo "Notice: postgresql_og84/data directory $PGDATA is empty"
+			echo "Notice: postgresql_og/data directory $PGDATA is empty"
 			echo "Calling '$PGBIN/initdb -D $PGDATA' to initialize"
 
 			$PGBIN/initdb -D $PGDATA
@@ -42,15 +42,15 @@ check_data_dir() {
 				exit $SMF_EXIT_ERR
 			fi
 		else
-			echo "Error: postgresql_og84/data directory $PGDATA is not empty, nor is it a valid PostgreSQL data directory"
+			echo "Error: postgresql_og/data directory $PGDATA is not empty, nor is it a valid PostgreSQL data directory"
 			exit $SMF_EXIT_ERR_CONFIG
 		fi
 	fi
 }
 
-PGBIN=`getproparg postgresql_og84/bin`
-PGDATA=`getproparg postgresql_og84/data`
-PGLOG=`getproparg postgresql_og84/log`
+PGBIN=`getproparg postgresql_og/bin`
+PGDATA=`getproparg postgresql_og/data`
+PGLOG=`getproparg postgresql_og/log`
 
 if [ -z $SMF_FMRI ]; then
 	echo "Error: SMF framework variables are not initialized"
@@ -58,12 +58,12 @@ if [ -z $SMF_FMRI ]; then
 fi
 
 if [ -z $PGDATA ]; then
-        echo "Error: postgresql_og84/data property not set"
+        echo "Error: postgresql_og/data property not set"
         exit $SMF_EXIT_ERR_CONFIG
 fi
 
 if [ -z $PGLOG ]; then
-        echo "Error: postgresql_og84/log property not set"
+        echo "Error: postgresql_og/log property not set"
         exit $SMF_EXIT_ERR_CONFIG
 fi
 

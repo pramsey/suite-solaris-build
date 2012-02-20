@@ -1,1 +1,64 @@
 OpenGeo Suite build for Solaris 10u9
+
+-------------------------------------------------------------------
+Hosted using GIT
+
+To get Git on Solaris:
+
+wget ftp://ftp.sunfreeware.com/pub/freeware/intel/10/git-1.7.6-sol10-x86-local.gz
+wget ftp://ftp.sunfreeware.com/pub/freeware/intel/10/libiconv-1.14-sol10-x86-local.gz
+wget ftp://ftp.sunfreeware.com/pub/freeware/intel/10/openssl-1.0.0g-sol10-x86-local.gz
+wget ftp://ftp.sunfreeware.com/pub/freeware/intel/10/libgcc-3.4.6-sol10-x86-local.gz
+gzip -d *.gz
+su
+/usr/sbin/pkgadd -d git-1.7.6-sol10-x86-local
+/usr/sbin/pkgadd -d libiconv-1.14-sol10-x86-local
+/usr/sbin/pkgadd -d openssl-1.0.0g-sol10-x86-local
+/usr/sbin/pkgadd -d libgcc-3.4.6-sol10-x86-local
+export PATH=${PATH}:/usr/local/bin
+export LD_LIBRARY_PATH=/usr/local/lib
+
+
+-------------------------------------------------------------------
+Theory of Operation
+
+* The installer consists of built binaries (pgsql/postgis, suite war files)
+  hosted separately, and scripts that orchestrate the unpacking of those
+  binaries and set-up of the system
+* The install scripts live in the scripts directory.
+* The installer is built with the make_installer.sh script. This script
+  downloads the binaries and places the scripts next to them with the 
+  right names and so on.
+
+
+-------------------------------------------------------------------
+PostGIS Installation
+
+The PostGIS installer writes Solaris binaries into a specified 
+directory, checking for pre-requisites such as a postgres user
+and appropriately writeable data areas before proceding. The
+PostGIS installer includes PostgreSQL 8.4, PostGIS 1.5 and 
+GDAL/OGR 1.8.
+
+Usage: ./install-opengeo-postgis.sh -I /install/path -D /db/path [-L /install/log/file]
+
+   TheSstandard Solaris install location is /usr/postgres and db location
+   is /var/postgres. Recommended install command:
+
+      ./install-opengeo-postgis.sh -I /usr/postgres -D /var/postgres
+
+With the suggsted install command, the binaries will be un-packed
+into /usr/postgres/opengeo-8.4 and the data area will be set 
+to /var/postgres/opengeo-8.4
+
+The script carries out the following steps
+
+* Check for installation precursors (utilities, packages, destination
+  directories)
+* Check for installation environment (users, memory settings, ownerships)
+* Unpack the binaries into the destination directory
+* Re-write the SMF template file to include the correct install location
+* Copy the SMF template and script files into place
+* Exit with instructions on the correct svccfg and svcadm commands
+
+
