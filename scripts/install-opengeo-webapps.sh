@@ -6,9 +6,12 @@
 # - Usage
 # - Action (Eventual hook for the install type: New, Upgrade, Repair, etc.)
 # - root-relative path names
-# - handle template data packs in standard directory (in place before war is deployed)
+# - handle template data packs in standard directory
+# -- (in place before war is deployed or packed into WAR)
 # - confirm optional directories exist if options are specified
 # - (Re)start Glassfish domain SMF
+# - Set container-specific JNDI connection string
+# - confirm binary checks
 
 # ============================================================
 # Script Options / Defaults
@@ -307,8 +310,6 @@ else
   log "Using the value provided $GlassfishUser"
 fi
 
-read -p "Args"
-
 # ============================================================
 # Actions
 # ============================================================
@@ -421,6 +422,7 @@ if [ ! $TemplateDataPack == 0 ]; then
   # unpack the tempate data file into the data dir
   $UnZipPath $TemplateDataPack -d $GeoServerDataDir
   checkrv $? "$UnZipPath $TemplateDataPack -d $GeoServerDataDir"
+  read -p "DataUnzipSFS"
 else
   log "Nothing to do ... Using stock data"  
 fi
