@@ -421,7 +421,6 @@ if [ ! $TemplateDataPack == 0 ]; then
   # unpack the tempate data file into the data dir
   $UnZipPath $TemplateDataPack -d $GeoServerDataDir
   checkrv $? "$UnZipPath $TemplateDataPack -d $GeoServerDataDir"
-  read -p "DataUnzipSFS"
 else
   log "Nothing to do ... Using stock data"  
 fi
@@ -431,8 +430,8 @@ fi
 
 # GeoExplorer Data Dir
 if [ "$GeoExplorerDataDir" != "0" ]; then
-  uid=`ls -al $GeoExplorerDataDir | head -n2 | tail -n1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
-  gid=`ls -al $GeoExplorerDataDir | head -n2 | tail -n1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
+  uid=`ls -al $GeoExplorerDataDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
+  gid=`ls -al $GeoExplorerDataDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
   if [ "$uid" != "$GlassfishUser" ] || [ "$gid" != "$GlassfishUser" ]; then
     log "Setting permissions on GeoExplorerDataDir"
     chown -hR $GlassfishUser:$GlassfishUser $GeoExplorerDataDir
@@ -444,8 +443,8 @@ fi
 
 # GeoServer Data Dir
 if [ "$GeoServerDataDir" != "0" ]; then  
-  uid=`ls -al $GeoServerDataDir | head -n2 | tail -n1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
-  gid=`ls -al $GeoServerDataDir | head -n2 | tail -n1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
+  uid=`ls -al $GeoServerDataDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
+  gid=`ls -al $GeoServerDataDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
   if [ "$uid" != "$GlassfishUser" ] || [ "$gid" != "$GlassfishUser" ]; then
     log "Setting permissions on GeoServerDataDir"
     chown -hR $GlassfishUser:$GlassfishUser $GeoServerDataDir
@@ -457,8 +456,8 @@ fi
 
 # GeoServer Log Dir
 if [ "$GeoServerLogDir" != "0" ]; then  
-  uid=`ls -al $GeoServerLogDir | head -n2 | tail -n1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
-  gid=`ls -al $GeoServerLogDir | head -n2 | tail -n1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
+  uid=`ls -al $GeoServerLogDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
+  gid=`ls -al $GeoServerLogDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
   if [ "$uid" != "$GlassfishUser" ] || [ "$gid" != "$GlassfishUser" ]; then
     log "Setting permissions on GeoServerLogDir"
     chown -hR $GlassfishUser:$GlassfishUser $GeoServerLogDir
