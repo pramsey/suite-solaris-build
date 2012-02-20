@@ -1,14 +1,12 @@
 #!/bin/bash
 
-rm -R /tmp/opengeo-suite-temp/*
-read -p "Clear?..."
-
 # TODO (General)
 # - Replace getfacl for storage on ZFS
 # - Make log output(s) & terminology consistent
 # - Usage
 # - Action (Eventual hook for the install type: New, Upgrade, Repair, etc.)
 # root-relative path names
+# handle template datapacks in standard directory (in place before war is deployed)
 
 # ============================================================
 # Script Options / Defaults
@@ -16,7 +14,7 @@ read -p "Clear?..."
 
 # Script Options
 
-  GtarPath="/bin/tar"
+  GtarPath="/usr/sfw/bin/gtar"
   ZipPath="/usr/bin/zip"
   UnZipPath="/usr/bin/unzip"
 
@@ -90,7 +88,7 @@ do
         GeoServerDataDir=$OPTARG;;
     L)  #echo "  Found the $opt (GeoServerLogDir) option, with value $OPTARG"
         GeoServerLogDir=$OPTARG;;
-    P)  #echo "  Fount the $opt (TemplateDataPack) option with value $OPTARG"
+    P)  #echo "  Found the $opt (TemplateDataPack) option, with value $OPTARG"
         TemplateDataPack=$OPTARG;;
     J)  #echo "  Found the $opt (JNDIConnRef) option, with value $OPTARG"
         JNDIConnRef=$OPTARG;;
@@ -109,7 +107,7 @@ echo "Preamble ..."
 # Are we effectively root? Yes, go. No, bail.
 # ============================================================
 
-if [ "$(id -u)" != "0" ]; then
+if [ "$(/usr/xpg4/bin/id -u)" != "0" ]; then
    quit "This script must be run as root, exiting ..."
 else
    echo "Confirmed that we're effectively running as root ..."
@@ -141,11 +139,13 @@ fi
 if [ "TRUE" == "$DebugMode" ]; then
   echo "DEBUG Deleting $InstallLog"
   rm $InstallLog
+  read -p "DEBUG Deleted $InstallLog ???"
   DebugArray=($TempDir $GeoExplorerDataDir $GeoServerDataDir $GeoServerLogDir)
   for i in "${DebugArray[@]}"; do
     if [ -d $i ]; then
-      echo "DEBUG Deleting from $i"
+      echo "DEBUG Deleting from $i"      
       find $i/* -exec rm -Rf {} ';'
+      read -p "DEBUG Deleted $i ???"
     fi 
   done
 fi
@@ -210,7 +210,7 @@ if [ "x" == "x$TempDir" ]; then
 else
   log "Found on the commandline ..."
   log "Using the value provided $TempDir"
-  TempDir="$TempDir/opengeo-suite-temp"
+  TempDir="$TempDir"
 fi
 
 if [ ! -d $TempDir ]; then
@@ -274,7 +274,7 @@ if [ "x" == "x$TemplateDataPack" ]; then
   TemplateDataPack=0
 else
   log "Found on the commandline ..."
-  log "Using the value provided $JNDIConnRef"
+  log "Using the value provided $TemplateDataPack"
 fi
 
 # o JNDI Connection Reference # * Yes, action # * No, do nothing
@@ -305,6 +305,8 @@ else
   log "Using the value provided $GlassfishUser"
 fi
 
+read -p "Args"
+
 # ============================================================
 # Actions
 # ============================================================
@@ -318,8 +320,8 @@ else
   log "Found Gtar where we expected it $GtarPath"
 fi
 
-$GtarPath -xf $SourcePkg -C $TempDir
-checkrv $? "$GtarPath -xf $SourcePkg -C $TempDir"
+$GtarPath xf $SourcePkg -C $TempDir
+checkrv $? "$GtarPath xf $SourcePkg -C $TempDir"
 
 # Unzipping WAR files that need updating with custom params
 
@@ -337,18 +339,20 @@ if [ $GeoExplorerDataDir == 0 ]; then
   log "Nothing to do ... Using default GeoExplorerDataDir."
 else
   log "Unpacking GeoExplorer WAR for custom configs"  
-  unzip $TempDir/geoexplorer.war WEB-INF/web.xml -d $TempDir/geoexplorer/
+  $UnZipPath $TempDir/geoexplorer.war WEB-INF/web.xml -d $TempDir/geoexplorer/
   checkrv $? "unzip $TempDir/geoexplorer.war /WEB-INF/web.xml -d $TempDir/geoexplorer/"
-  read -p "GeoExplorerUnzip ..."
-  log "Writing custom GeoExplorer DataDir to template configuration file"
   oldvalue="<!--CustomGeoExplorerDataDir-->" 
-  newvalue="<DOUGLAS>${GeoExplorerDataDir//$match/$replace}<\/DOUGLAS>"
-  sed -i s/"$oldvalue"/"$newvalue"/g $TempDir/geoexplorer/WEB-INF/web.xml
-  #checkrv $? "sed -i 's/$oldvalue/$newvalue/g' $TempDir/geoexplorer/WEB-INF/web.xml"
-read -p "GeoExplorerSED ..."
-exit
-  zip -fmrD $TempDir/geoexplorer.war $TempDir/geoexplorer/WEB-INF/web.xml
-  checkrv $? "zip -fmrD $TempDir/geoexplorer.war $TempDir/geoexplorer/"
+  newvalue="<init-param><param-name>GEOEXPLORER_DATA<\/param-name><param-value>${GeoExplorerDataDir//$match/$replace}<\/param-value><\/init-param>"
+  log "Writing custom GeoExplorer DataDir to template configuration file"
+  log "($newvalue)"
+  sedfile=$TempDir/geoexplorer/WEB-INF/web.xml
+  sedtemp=$TempDir/geoexplorer/WEB-INF/web.xml.tmp
+  sed s/$oldvalue/$newvalue/g $sedfile > $sedtemp && mv $sedtemp $sedfile 
+  checkrv $? "sed s/$oldvalue/$newvalue/g $sedfile > $sedtemp && mv $sedtemp $sedfile"
+  pushd $TempDir/geoexplorer
+  $ZipPath -fmrD ../geoexplorer.war WEB-INF/web.xml
+  checkrv $? "$ZipPath -fmrD ../geoexplorer.war WEB-INF/web.xml"
+  popd
 fi
 
 log "** Custom GeoServer Log and/or Data Dir"
@@ -356,8 +360,8 @@ log "** Custom GeoServer Log and/or Data Dir"
 # if we need to do some GeoServer param customizations, upack the WAR
 if [ ! $GeoServerDataDir == 0 ] || [ ! $GeoServerLogDir == 0 ]; then
   log "Unpacking GeoServer WAR for custom configs"
-  unzip $TempDir/geoserver.war /WEB-INF/web.xml -d $TempDir/geoserver/
-  checkrv $? "unzip $TempDir/geoserver.war /WEB-INF/web.xml -d $TempDir/geoserver/"
+  $UnZipPath $TempDir/geoserver.war WEB-INF/web.xml -d $TempDir/geoserver/
+  checkrv $? "$UnZipPath $TempDir/geoserver.war WEB-INF/web.xml -d $TempDir/geoserver/"
 else
   log "Not unpacking GeoServer WAR - No custom configs"
 fi
@@ -366,11 +370,14 @@ fi
 if [ $GeoServerDataDir == 0 ]; then
   log "Nothing to do ... Using default GeoServerDataDir."
 else
-  log "Writing custom GeoServer DataDir to template configuration file"
   oldvalue="<!--CustomGeoServerDataDir-->"
-  newvalue="<context-param><param-name>GEOSERVER_DATA_DIR</param-name><param-value>$GeoServerDataDir</param-value></context-param>"
-  sed -i 's/$oldvalue/$newvalue/g' $TempDir/geoserver/WEB-INF/web.xml
-  checkrv $? "sed -i 's/$oldvalue/$newvalue/g' $TempDir/geoserver/WEB-INF/web.xml"
+  newvalue="<context-param><param-name>GEOSERVER_DATA_DIR<\/param-name><param-value>${GeoServerDataDir//$match/$replace}<\/param-value><\/context-param>"
+  log "Writing custom GeoServer DataDir to template configuration file"
+  log "($newvalue)"
+  sedfile=$TempDir/geoserver/WEB-INF/web.xml
+  sedtemp=$TempDir/geoserver/WEB-INF/web.xml.tmp
+  sed s/$oldvalue/$newvalue/g $sedfile > $sedtemp && mv $sedtemp $sedfile 
+  checkrv $? "sed s/$oldvalue/$newvalue/g $sedfile > $sedtemp && mv $sedtemp $sedfile"
 fi
 
 # custom GeoServerLogDir?
@@ -379,16 +386,20 @@ if [ $GeoServerLogDir == 0 ]; then
 else
   log "Writing custom GeoServer LogDir to template configuration file"
   oldvalue="<!--CustomGeoServerLogDir-->"
-  newvalue="<context-param><param-name>GEOSERVER_DATA_DIR</param-name><param-value>$GeoServerLogDir</param-value></context-param>"
-  sed -i 's/$oldvalue/$newvalue/g' $TempDir/geoserver/WEB-INF/web.xml
-  checkrv $? "sed -i 's/$oldvalue/$newvalue/g' $TempDir/geoserver/WEB-INF/web.xml"
+  newvalue="<context-param><param-name>GEOSERVER_LOG_DIR<\/param-name><param-value>${GeoServerLogDir//$match/$replace}<\/param-value><\/context-param>"
+  sedfile=$TempDir/geoserver/WEB-INF/web.xml
+  sedtemp=$TempDir/geoserver/WEB-INF/web.xml.tmp
+  sed s/$oldvalue/$newvalue/g $sedfile > $sedtemp && mv $sedtemp $sedfile 
+  checkrv $? "sed s/$oldvalue/$newvalue/g $sedfile > $sedtemp && mv $sedtemp $sedfile"
 fi
 
 # if we did something here, repack the WAR
 if [ ! $GeoServerDataDir == 0 ] || [ ! $GeoServerLogDir == 0 ]; then
   log "Repacking GeoServer WAR with custom configurations"
-  zip -fmrD $TempDir/geoserver.war $TempDir/geoserver/
-  checkrv $? "zip -fmrD $TempDir/geoserver.war $TempDir/geoserver/"
+  pushd $TempDir/geoserver
+  $ZipPath -fmrD ../geoserver.war WEB-INF/web.xml
+  checkrv $? "$ZipPath -fmrD ../geoserver.war WEB-INF/web.xml"
+  popd
 else
   log "Not repacking geoserver WAR - No custom configs"
 fi
@@ -400,14 +411,17 @@ log "** Custom Template Data Pack"
 if [ ! $TemplateDataPack == 0 ]; then
   log "Importing TemplateDataPack"
   if [ ! -f $TemplateDataPack ]; then
-    # confirm that the source file exists
-    quit "TemplateDataPack $TemplateDataPack does not exist, exiting ..."
+    quit "TemplateDataPack $TemplateDataPack was specified but does not exist, exiting ..."
   fi
-  # unpack the source file into the data dir
-  unzip $TemplateDataPack -d $GeoServerDataDir
-  checkrv $? "unzip $TemplateDataPack -d $GeoServerDataDir"
+  if [ ! -d $GeoServerDataDir ]; then
+    quit "GeoServerDataDir ($GeoServerDataDir) for Template Data Pack doesn't exist"
+  fi
+  # unpack the tempate data file into the data dir
+  $UnZipPath $TemplateDataPack -d $GeoServerDataDir
+  checkrv $? "$UnZipPath $TemplateDataPack -d $GeoServerDataDir"
+  read -p "DataUnzipSFS"
 else
-  log "Nothing to do ... Using stock data package"  
+  log "Nothing to do ... Using stock data"  
 fi
 
 # Check/Set directory permissions for GFish user 
