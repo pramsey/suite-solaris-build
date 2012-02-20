@@ -500,6 +500,5 @@ checkrv $? "cp $TempDir/geoserver.war $TargetDir"
 log "Copied geoserver.war to $TargetDir"
 
 log "** (Re)starting Glassfish domain SMF / service"
-
 # (Re)start Glassfish domain SMF
 # Confirm that we need to do this ...?
