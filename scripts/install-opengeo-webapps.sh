@@ -238,6 +238,11 @@ if [ "x" == "x$GeoExplorerDataDir" ]; then
 else
   log "Found on the commandline ..."
   log "Will use the value provided $GeoExplorerDataDir"
+  if [ ! -d $GeoExplorerDataDir ]; then
+    quit "GeoExplorerDataDir directory $GeoExplorerDataDir does not exist, exiting ..."
+  else
+    log "Found GeoExplorerDataDir directory $GeoExplorerDataDir, proceeding ..."
+  fi
 fi
 
 # o GeoServer Data Dir # * Yes, proceed # * No, use default
@@ -252,6 +257,11 @@ if [ "x" == "x$GeoServerDataDir" ]; then
 else
   log "Found on the commandline ..."
   log "Will use the value provided $GeoServerDataDir"
+  if [ ! -d $GeoServerDataDir ]; then
+    quit "GeoServerDataDir directory $GeoServerDataDir does not exist, exiting ..."
+  else
+    log "Found GeoServerDataDir directory $GeoServerDataDir, proceeding ..."
+  fi
 fi
 
 # o GeoServer Log Dir # * Yes, proceed # * No, use default
@@ -266,7 +276,11 @@ if [ "x" == "x$GeoServerLogDir" ]; then
 else
   log "Found on the commandline ..."
   log "Will use the value provided $GeoServerLogDir"
-fi
+  if [ ! -d $GeoServerLogDir ]; then
+    quit "GeoServerLogDir directory $GeoServerLogDir does not exist, exiting ..."
+  else
+    log "Found GeoServerLogDir directory $GeoServerLogDir, proceeding ..."
+  fifi
 
 # o TemplateDataPack # * Yes, action # * No, do nothing
 # ============================================================
@@ -280,6 +294,11 @@ if [ "x" == "x$TemplateDataPack" ]; then
 else
   log "Found on the commandline ..."
   log "Using the value provided $TemplateDataPack"
+  if [ ! -f $TemplateDataPack ]; then
+    quit "TemplateDataPack $TemplateDataPack was specified but does not exist, exiting ..."
+  else
+    log "Found TemplateDataPack file $TemplateDataPack, proceeding ..."
+  fi
 fi
 
 # o JNDI Connection Reference # * Yes, action # * No, do nothing
@@ -387,9 +406,10 @@ fi
 if [ $GeoServerLogDir == 0 ]; then
   log "Nothing to do ... Using default GeoServerLogDir."
 else
-  log "Writing custom GeoServer LogDir to template configuration file"
   oldvalue="<!--CustomGeoServerLogDir-->"
   newvalue="<context-param><param-name>GEOSERVER_LOG_DIR<\/param-name><param-value>${GeoServerLogDir//$match/$replace}<\/param-value><\/context-param>"
+  log "Writing custom GeoServer LogDir to template configuration file"
+  log "($newvalue)"
   sedfile=$TempDir/geoserver/WEB-INF/web.xml
   sedtemp=$TempDir/geoserver/WEB-INF/web.xml.tmp
   sed s/$oldvalue/$newvalue/g $sedfile > $sedtemp && mv $sedtemp $sedfile 
@@ -413,13 +433,7 @@ fi
 log "** Custom Template Data Pack"
 if [ ! $TemplateDataPack == 0 ]; then
   log "Importing TemplateDataPack"
-  if [ ! -f $TemplateDataPack ]; then
-    quit "TemplateDataPack $TemplateDataPack was specified but does not exist, exiting ..."
-  fi
-  if [ ! -d $GeoServerDataDir ]; then
-    quit "GeoServerDataDir ($GeoServerDataDir) for Template Data Pack doesn't exist"
-  fi
-  # unpack the tempate data file into the data dir
+  # sfs unpack the tempate data file into the data dir
   $UnZipPath $TemplateDataPack -d $GeoServerDataDir
   checkrv $? "$UnZipPath $TemplateDataPack -d $GeoServerDataDir"
   read -p "DataUnzipSFS"
