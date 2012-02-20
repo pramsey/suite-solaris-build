@@ -39,7 +39,7 @@
 
   dJNDIConnRef="jndi/conn/ref/yo"
 
-  dGlassfishUser="ssmith"
+  dGlassfishUser="dcuser"
 
 # ============================================================
 # Script Subroutines
@@ -74,7 +74,7 @@ checkrv() {
 # Poll commandline arguments
 # ============================================================
 
-while getopts B:I:S:T:M:E:G:L:J:U:A: opt
+while getopts B:I:S:T:M:E:G:L:P:J:U:A: opt
 do
   case "$opt" in
     B)  #echo "  Found the $opt (Debug/Testing Mode), with value $OPTARG"
@@ -280,7 +280,8 @@ else
     quit "GeoServerLogDir directory $GeoServerLogDir does not exist, exiting ..."
   else
     log "Found GeoServerLogDir directory $GeoServerLogDir, proceeding ..."
-  fifi
+  fi
+fi
 
 # o TemplateDataPack # * Yes, action # * No, do nothing
 # ============================================================
@@ -436,7 +437,6 @@ if [ ! $TemplateDataPack == 0 ]; then
   # sfs unpack the tempate data file into the data dir
   $UnZipPath $TemplateDataPack -d $GeoServerDataDir
   checkrv $? "$UnZipPath $TemplateDataPack -d $GeoServerDataDir"
-  read -p "DataUnzipSFS"
 else
   log "Nothing to do ... Using stock data"  
 fi
@@ -444,16 +444,18 @@ fi
 # Check/Set directory permissions for GFish user 
 # [[[]]] TODO iterate this ???
 
+log "** Directory Permissions"
+
 # GeoExplorer Data Dir
 if [ "$GeoExplorerDataDir" != "0" ]; then
   uid=`ls -al $GeoExplorerDataDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
   gid=`ls -al $GeoExplorerDataDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
   if [ "$uid" != "$GlassfishUser" ] || [ "$gid" != "$GlassfishUser" ]; then
-    log "Setting permissions on GeoExplorerDataDir"
+    log "Updating permissions on GeoExplorerDataDir for $GlassfishUser"
     chown -hR $GlassfishUser:$GlassfishUser $GeoExplorerDataDir
     checkrv $? "chown -hR $GlassfishUser:$GlassfishUser $GeoExplorerDataDir"
   else
-    log "'$GeoExplorerDataDir' is owned by '$GlassfishUser$GlassfishUser'"
+    log "'$GeoExplorerDataDir' is already owned by '$GlassfishUser$GlassfishUser'"
   fi
 fi
 
@@ -462,11 +464,11 @@ if [ "$GeoServerDataDir" != "0" ]; then
   uid=`ls -al $GeoServerDataDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
   gid=`ls -al $GeoServerDataDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
   if [ "$uid" != "$GlassfishUser" ] || [ "$gid" != "$GlassfishUser" ]; then
-    log "Setting permissions on GeoServerDataDir"
+    log "Updating permissions on GeoServerDataDir for $GlassfishUser"
     chown -hR $GlassfishUser:$GlassfishUser $GeoServerDataDir
     checkrv $? "chown -hR $GlassfishUser:$GlassfishUser $GeoServerDataDir"
   else
-    log "'$GeoServerDataDir' is owned by '$GlassfishUser:$GlassfishUser'"
+    log "'$GeoServerDataDir' is already owned by '$GlassfishUser:$GlassfishUser'"
   fi
 fi
 
@@ -475,23 +477,29 @@ if [ "$GeoServerLogDir" != "0" ]; then
   uid=`ls -al $GeoServerLogDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
   gid=`ls -al $GeoServerLogDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
   if [ "$uid" != "$GlassfishUser" ] || [ "$gid" != "$GlassfishUser" ]; then
-    log "Setting permissions on GeoServerLogDir"
+    log "Updating permissions on GeoServerLogDir for $GlassfishUser"
     chown -hR $GlassfishUser:$GlassfishUser $GeoServerLogDir
     checkrv $? "chown -hR $GlassfishUser:$GlassfishUser $GeoServerLogDir"
   else
-    log "'$GeoServerLogDir' is owned by '$GlassfishUser:$GlassfishUser'"
+    log "'$GeoServerLogDir' is already owned by '$GlassfishUser:$GlassfishUser'"
   fi
 fi
+
+log "** Copying processed WARs to WebAppTarget Directory"
 
 #  Deploy GeoExplorer
 # o Copy WAR to Target Directory
 cp $TempDir/geoexplorer.war $TargetDir
 checkrv $? "cp $TempDir/geoexplorer.war $TargetDir"
+log "Copied geoexplorer.war to $TargetDir"
 
 # Deploy GeoServer
 # o Copy WAR to Target Directory
 cp $TempDir/geoserver.war $TargetDir
 checkrv $? "cp $TempDir/geoserver.war $TargetDir"
+log "Copied geoserver.war to $TargetDir"
+
+log "** (Re)starting Glassfish domain SMF / service"
 
 # (Re)start Glassfish domain SMF
 # Confirm that we need to do this ...?
