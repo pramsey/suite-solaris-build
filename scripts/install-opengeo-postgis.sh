@@ -122,8 +122,8 @@ log "Using $shared_buffer as shared_buffer size for PostgreSQL"
 # Check suitability of the data directory
 #uid=`getfacl $db_path | grep owner | cut -f2 -d: | tr -d ' '` 
 #gid=`getfacl $db_path | grep group | cut -f2 -d: | tr -d ' '`
-uid=`ls -al . | head -n2 | tail -n1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
-gid=`ls -al . | head -n2 | tail -n1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
+uid=`ls -al $db_path | head -2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' ' | tr -d '\n'`
+gid=`ls -al $db_path | head -2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' ' | tr -d '\n'`
 if [ "$uid" != "postgres" ] || [ "$gid" != "postgres" ]; then
   quit "Database directory '$db_path' must be owned by 'postgres' user and group. Run this command: chown postgres:postgres $db_path"
 else
@@ -138,8 +138,8 @@ if [ -d $install_path/$pg_version ]; then
   quit "There is already software installed at $install_path/$pg_version"
 fi
 log "Untaring $pkg to $install_path"
-$gtar -xfz $pkg -C $install_path 
-checkrv $? "$gtar -xfz $pkg -C $install_path"
+$gtar -xf $pkg -C $install_path 
+checkrv $? "$gtar -xf $pkg -C $install_path"
 
 # Install the SMF start script
 svc_name=postgresql_og
@@ -171,7 +171,7 @@ log "Installed $svc_script_loc"
 sed s,@bin@,$bin_path, $svc_manifest_template | \
   sed s,@data@,$data_path, > \
   $svc_manifest_loc
-log "Installed $svc_manifest_loc"
+log "Installed ${svc_manifest_loc}"
 
 # Add the install library locations to the system library path
 /usr/bin/crle -u -l $install_path/$pg_version/lib
@@ -183,7 +183,8 @@ log "Binaries in $install_path/$pg_version"
 log "Database in $db_path/$pg_version"
 log "Installation complete, to enable the PostgreSQL service, run:"
 log ""
-log "   /usr/sbin/svcadm enable ${svc_name}:default_64bit"
+log "   /usr/sbin/svccfg import ${svc_manifest_loc}"
+log "   /usr/sbin/svcadm enable ${svc_name}:default"
 log ""
 log "Done"
 

@@ -63,6 +63,7 @@ cp $pgsql_smf_manifest $staging_dir/resources
 cp $pgsql_smf_installer $staging_dir
 cp $webapps_installer $staging_dir
 cp $suite_installer $staging_dir
+cp $pgsql_installer $staging_dir
 
 # Copy and then zip template config web.xml files into WARs
 # (To keep client/version-specific templates independently of the core WARs)
