@@ -30,3 +30,35 @@ Theory of Operation
   downloads the binaries and places the scripts next to them with the 
   right names and so on.
 
+
+-------------------------------------------------------------------
+PostGIS Installation
+
+The PostGIS installer writes Solaris binaries into a specified 
+directory, checking for pre-requisites such as a postgres user
+and appropriately writeable data areas before proceding. The
+PostGIS installer includes PostgreSQL 8.4, PostGIS 1.5 and 
+GDAL/OGR 1.8.
+
+Usage: ./install-opengeo-postgis.sh -I /install/path -D /db/path [-L /install/log/file]
+
+   TheSstandard Solaris install location is /usr/postgres and db location
+   is /var/postgres. Recommended install command:
+
+      ./install-opengeo-postgis.sh -I /usr/postgres -D /var/postgres
+
+With the suggsted install command, the binaries will be un-packed
+into /usr/postgres/opengeo-8.4 and the data area will be set 
+to /var/postgres/opengeo-8.4
+
+The script carries out the following steps
+
+* Check for installation precursors (utilities, packages, destination
+  directories)
+* Check for installation environment (users, memory settings, ownerships)
+* Unpack the binaries into the destination directory
+* Re-write the SMF template file to include the correct install location
+* Copy the SMF template and script files into place
+* Exit with instructions on the correct svccfg and svcadm commands
+
+
