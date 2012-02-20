@@ -13,7 +13,7 @@ pkg_name=opengeosuite.tar
 staging_dir=/tmp/solarisinst/
 pwd=`pwd`
 
-pgsql_binaries="http://data.opengeo.org/solaris/opengeo-pgsql-20110217.tar.gz"
+pgsql_binaries="http://data.opengeo.org/solaris/opengeo-pgsql-20120217.tar.gz"
 pgsql_smf_script="smf/postgres_og"
 pgsql_smf_manifest="smf/postgresql_og.xml.template"
 pgsql_installer="scripts/install-opengeo-postgis.sh"
