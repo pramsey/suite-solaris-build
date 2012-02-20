@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # TODO (General)
+# - rewire source assumptions around consolidated package
 # - Replace getfacl for storage on ZFS
 # - Make log output(s) & terminology consistent
 # - Usage
