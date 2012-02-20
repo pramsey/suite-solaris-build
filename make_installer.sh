@@ -13,7 +13,7 @@ pkg_name=opengeosuite.tar
 staging_dir=/tmp/solarisinst/
 pwd=`pwd`
 
-pgsql_binaries="http://data.opengeo.org/solaris/opengeo-pgsql-20110217.tar.gz"
+pgsql_binaries="http://data.opengeo.org/solaris/opengeo-pgsql-20120217.tar.gz"
 pgsql_smf_script="smf/postgres_og"
 pgsql_smf_manifest="smf/postgresql_og.xml.template"
 pgsql_installer="scripts/install-opengeo-postgis.sh"
@@ -30,6 +30,13 @@ geoexplorer_config=scripts/geoexplorer.web.xml
 webapps_installer=scripts/install-opengeo-webapps.sh
 suite_installer=scripts/install-opengeo-suite.sh
 
+# Find our dependencies
+wget=`which wget`
+if [ ! -x "$wget" ]; then
+  echo "Error: Unable to find wget. Exiting."
+  exit 1
+fi
+
 # Set up the staging area
 echo "Cleanup staging ..."
 if [ -d $staging_dir ]; then
@@ -40,14 +47,14 @@ mkdir $staging_dir/resources
 
 # Get the PgSQL binaries
 echo "Get PGSQL binaries ..."
-wget -o $staging_dir/resources/opengeo-pgsql.tar.gz $pgsql_binaries
+$wget -O $staging_dir/resources/opengeo-pgsql.tar.gz $pgsql_binaries
 
 # Get the Suite WebApp WARs
 echo "Get Suite WebApp WARs ..."
-wget -o $staging_dir/resources/geoserver.war $geoserver_war
-wget -o $staging_dir/resources/geoexplorer.war $geoexplorer_war
-wget -o $staging_dir/resources/dashboard.war $dashboard_war
-wget -o $staging_dir/resources/geoeditor.war $geoeditor_war
+$wget -O $staging_dir/resources/geoserver.war $geoserver_war
+$wget -O $staging_dir/resources/geoexplorer.war $geoexplorer_war
+$wget -O $staging_dir/resources/dashboard.war $dashboard_war
+$wget -O $staging_dir/resources/geoeditor.war $geoeditor_war
 
 # Copy the text bits into place
 echo "Copy text bits into place ..."
