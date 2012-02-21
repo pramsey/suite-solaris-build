@@ -75,11 +75,8 @@ fi
 
 if [ "$DoDataPack" == "TRUE" ]; then
   wget -O $staging_dir/datapack.zip $SrcDataPack
-  read -p "datapack in staging?"
   pushd $staging_dir
-  read -p "pushd staging"
   zip -d resources/geoserver.war /data/* && unzip datapack.zip && zip -mr resources/geoserver.war data
-  read -p "WARs wiht new data?"
   rm datapack.zip
   popd
 fi
