@@ -43,29 +43,35 @@
 # ============================================================
 
 usage() {
-  echo "Usage: $0 [options] ..."
+  echo "Usage:"
+  echo "  $0 -S /source/to/targz/package/ -T /war/deploy/dir [options]"
   echo ""
-  echo "Options:"
+  echo "Sample:"
+  echo "  $0 -S /tmp/opengeo-webapps.tar.gz -T /glassfish3/glassfish/domains/domain1/autodeploy [Options] ..."
   echo ""
-  echo "  B DebugMode (default FALSE)"
-  echo "     If TRUE, it clears contents from any of:"
-  echo "     InstallLog, TempDir, GeoExplorerDataDir, GeoServerDataDir, and GeoServerLogDir."
+  echo "Required Parameters:"
   echo ""
-  echo "  I InstallLog (default (pwd)/install-opengeo-suite.log)"
-  echo "     Full path to the the log from this installation."
-  echo "     Will make the specified if it does not exist, or append otherwise."
-  echo ""
-  echo "  S SourcePkg (default (pwd)/pkg/opengeo-suite.2.4.3-ee-solaris.tar)"
+  echo "  S SourcePkg (required)"
   echo "     Full path to source tarball of the OpenGeo Suite web applications (excluding PostGIS)."
   echo "     Script will fail if the path does not exist."
   echo ""
-  echo "  T TargetDir (default /glassfish3/glassfish/domains/domain1/autodeploy)"
+  echo "  T TargetDir (required)"
   echo "     Full path to the servlet container auto-deploy directory."
   echo "     Script will fail if the path does not exist."
+  echo ""
+  echo "Options:"
+  echo ""
+  echo "  I InstallLog (default (pwd)/install-opengeo-suite.log)"
+  echo "     Full path to the the log from this installation."
+  echo "     Will make the specified file if it does not exist, or append otherwise."
   echo ""
   echo "  M TempDir (default /tmp/opengeo-suite-temp)"
   echo "     Full path to the installation's temporary directory."
   echo "     If the directory can't be created the script will exit."
+  echo ""
+  echo "  B DebugMode (default FALSE)"
+  echo "     If TRUE, it clears contents from any of:"
+  echo "     InstallLog, TempDir, GeoExplorerDataDir, GeoServerDataDir, and GeoServerLogDir."
   echo ""
   echo "  E GeoExplorerDataDir (default TargetDir/geoexplorer/data)"
   echo "     Full path to a custom GeoExplorer Data Directory."
@@ -155,6 +161,13 @@ done
 
 echo ""
 echo "Preamble ..."
+
+# Check required parameters.
+# ============================================================
+
+if [ "x$SourcePkg" == "x" ] || [ "x$TargetDir" == "x" ]; then
+  usage
+fi
 
 # Are we effectively root? Yes, go. No, bail.
 # ============================================================
