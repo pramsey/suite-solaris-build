@@ -2,15 +2,11 @@
 
 # TODO (General)
 # - rewire source assumptions around consolidated package
-# - Replace getfacl for storage on ZFS
-# - Make log output(s) & terminology consistent
-# - Usage
 # - Action (Eventual hook for the install type: New, Upgrade, Repair, etc.)
 # - root-relative path names
 # - handle template data packs in standard directory
 # -- (in place before war is deployed or packed into WAR)
-# - confirm optional directories exist if options are specified
-# - (Re)start Glassfish domain SMF
+# - (Re)start Container service/SMF
 # - Set container-specific JNDI connection string
 # - confirm binary checks
 
@@ -30,25 +26,76 @@
 
   dInstallLog="$(pwd)/install-opengeo-suite.log"
 
-  dSourceDir="$(pwd)/pkg"
-  dSourcePkg="$dSourceDir/opengeo-suite-2.4.3-ee-solaris.tar"
+  dSourceDir="$(pwd)/resources"
+  dSourcePkg="$dSourceDir/opengeo-webapps.tar.gz"
 
   dTempDir="/tmp/opengeo-suite-temp"
 
-  dGlassfish="/glassfish3/glassfish/domains/domain1"
-  dTargetDir="$dGlassfish/autodeploy"
+  dContainer="/glassfish3/glassfish/domains/domain1"
+  dTargetDir="$dContainer/autodeploy"
 
   dJNDIConnRef="jndi/conn/ref/yo"
 
-  dGlassfishUser="dcuser"
+  dContainerUser="dcuser"
 
 # ============================================================
 # Script Subroutines
 # ============================================================
 
 usage() {
-  echo "Usage ..."
+  echo "Usage: $0 [options] ..."
   echo ""
+  echo "Options:"
+  echo ""
+  echo "  B DebugMode (default FALSE)"
+  echo "     If TRUE, it clears contents from any of:"
+  echo "     InstallLog, TempDir, GeoExplorerDataDir, GeoServerDataDir, and GeoServerLogDir."
+  echo ""
+  echo "  I InstallLog (default (pwd)/install-opengeo-suite.log)"
+  echo "     Full path to the the log from this installation."
+  echo "     Will make the specified if it does not exist, or append otherwise."
+  echo ""
+  echo "  S SourcePkg (default (pwd)/pkg/opengeo-suite.2.4.3-ee-solaris.tar)"
+  echo "     Full path to source tarball of the OpenGeo Suite web applications (excluding PostGIS)."
+  echo "     Script will fail if the path does not exist."
+  echo ""
+  echo "  T TargetDir (default /glassfish3/glassfish/domains/domain1/autodeploy)"
+  echo "     Full path to the servlet container auto-deploy directory."
+  echo "     Script will fail if the path does not exist."
+  echo ""
+  echo "  M TempDir (default /tmp/opengeo-suite-temp)"
+  echo "     Full path to the installation's temporary directory."
+  echo "     If the directory can't be created the script will exit."
+  echo ""
+  echo "  E GeoExplorerDataDir (default TargetDir/geoexplorer/data)"
+  echo "     Full path to a custom GeoExplorer Data Directory."
+  echo "     Script will exit if a custom path is specified but doesn't exist."
+  echo ""   
+  echo "  G GeoServerDataDir (default TargetDir/geoserver/data)"
+  echo "     Full path to a custom GeoServer Data Directory."
+  echo "     Script will exit if a custom path is specified but doesn't exist."
+  echo ""   
+  echo "  L GeoServerLogDir (default TargetDir/geoexplorer/logs)"
+  echo "     Full path to a custom GeoServer Log Directory."
+  echo "     Script will exit if a custom path is specified but doesn't exist."
+  echo ""
+  echo "  P TemplateDataPack (default data contents of the GeoServer.WAR)"
+  echo "     Full path to a ZIP file containing a preconfigured GeoServer data directory."
+  echo "     Script will exit if a custom data pack is specified but doesn't exist."   
+  echo ""
+  echo "  J JNDIConnRef (default none)"
+  echo "     Custom reference to a container-level JNDI connection string."
+  echo ""   
+  echo "  U ContainerUser (default dcuser)"
+  echo "     Username of the user:group (should be the same) that runs the servlet container process."
+  echo "     The script makes this user the owner of any custom log/data dirs."
+  echo ""
+  echo "  A ScriptAction (default install)"
+  echo "     Eventual hook for an installation type (install, upgrade, repair, recover, etc.)"
+  echo "     Not used."
+  echo ""
+  echo "  * Any other option is unexpected, and envokes the Usage Message and Exits the script."
+  exit
 }
 
 log() {
@@ -98,12 +145,11 @@ do
         TemplateDataPack=$OPTARG;;
     J)  #echo "  Found the $opt (JNDIConnRef) option, with value $OPTARG"
         JNDIConnRef=$OPTARG;;
-    U)  #echo "  Found the $opt (GlassfishUser) option, with value $OPTARG"
-        GlassfishUser=$OPTARG;;
+    U)  #echo "  Found the $opt (ContainerUser) option, with value $OPTARG"
+        ContainerUser=$OPTARG;;
     A)  #echo "  Found the $opt (ScriptAction) option, with value $OPTARG"
         ScriptAction=$OPTARG;;
-    *)  #echo "Unknown option: $opt, with value $OPTARG"
-        usage;;
+    *) usage;;
   esac
 done
 
@@ -317,18 +363,18 @@ else
   log "Using the value provided $JNDIConnRef"
 fi
 
-# o Glassfish Service User # * Yes, action # * No, use default
+# o Container Service User # * Yes, action # * No, use default
 # ============================================================
 
-log "** Glassfish User (-U)"
+log "** Container User (-U)"
 
-if [ "x" == "x$GlassfishUser" ]; then
+if [ "x" == "x$ContainerUser" ]; then
   log "Not specified on the commandline ..."
-  log "Will use default $dGlassfishUser."
-  GlassfishUser=$dGlassfishUser
+  log "Will use default $dContainerUser."
+  ContainerUser=$dContainerUser
 else
   log "Found on the commandline ..."
-  log "Using the value provided $GlassfishUser"
+  log "Using the value provided $ContainerUser"
 fi
 
 # ============================================================
@@ -344,8 +390,8 @@ else
   log "Found Gtar where we expected it $GtarPath"
 fi
 
-$GtarPath xf $SourcePkg -C $TempDir
-checkrv $? "$GtarPath xf $SourcePkg -C $TempDir"
+$GtarPath -xf $SourcePkg -C $TempDir
+checkrv $? "$GtarPath -xf $SourcePkg -C $TempDir"
 
 # Unzipping WAR files that need updating with custom params
 
@@ -451,12 +497,12 @@ log "** Directory Permissions"
 if [ "$GeoExplorerDataDir" != "0" ]; then
   uid=`ls -al $GeoExplorerDataDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
   gid=`ls -al $GeoExplorerDataDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
-  if [ "$uid" != "$GlassfishUser" ] || [ "$gid" != "$GlassfishUser" ]; then
-    log "Updating permissions on GeoExplorerDataDir for $GlassfishUser"
-    chown -hR $GlassfishUser:$GlassfishUser $GeoExplorerDataDir
-    checkrv $? "chown -hR $GlassfishUser:$GlassfishUser $GeoExplorerDataDir"
+  if [ "$uid" != "$ContainerUser" ] || [ "$gid" != "$ContainerUser" ]; then
+    log "Updating permissions on GeoExplorerDataDir for $ContainerUser"
+    chown -hR $ContainerUser:$ContainerUser $GeoExplorerDataDir
+    checkrv $? "chown -hR $ContainerUser:$ContainerUser $GeoExplorerDataDir"
   else
-    log "'$GeoExplorerDataDir' is already owned by '$GlassfishUser$GlassfishUser'"
+    log "'$GeoExplorerDataDir' is already owned by '$ContainerUser$ContainerUser'"
   fi
 fi
 
@@ -464,12 +510,12 @@ fi
 if [ "$GeoServerDataDir" != "0" ]; then  
   uid=`ls -al $GeoServerDataDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
   gid=`ls -al $GeoServerDataDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
-  if [ "$uid" != "$GlassfishUser" ] || [ "$gid" != "$GlassfishUser" ]; then
-    log "Updating permissions on GeoServerDataDir for $GlassfishUser"
-    chown -hR $GlassfishUser:$GlassfishUser $GeoServerDataDir
-    checkrv $? "chown -hR $GlassfishUser:$GlassfishUser $GeoServerDataDir"
+  if [ "$uid" != "$ContainerUser" ] || [ "$gid" != "$ContainerUser" ]; then
+    log "Updating permissions on GeoServerDataDir for $ContainerUser"
+    chown -hR $ContainerUser:$ContainerUser $GeoServerDataDir
+    checkrv $? "chown -hR $ContainerUser:$ContainerUser $GeoServerDataDir"
   else
-    log "'$GeoServerDataDir' is already owned by '$GlassfishUser:$GlassfishUser'"
+    log "'$GeoServerDataDir' is already owned by '$ContainerUser:$ContainerUser'"
   fi
 fi
 
@@ -477,12 +523,12 @@ fi
 if [ "$GeoServerLogDir" != "0" ]; then  
   uid=`ls -al $GeoServerLogDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
   gid=`ls -al $GeoServerLogDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
-  if [ "$uid" != "$GlassfishUser" ] || [ "$gid" != "$GlassfishUser" ]; then
-    log "Updating permissions on GeoServerLogDir for $GlassfishUser"
-    chown -hR $GlassfishUser:$GlassfishUser $GeoServerLogDir
-    checkrv $? "chown -hR $GlassfishUser:$GlassfishUser $GeoServerLogDir"
+  if [ "$uid" != "$ContainerUser" ] || [ "$gid" != "$ContainerUser" ]; then
+    log "Updating permissions on GeoServerLogDir for $ContainerUser"
+    chown -hR $ContainerUser:$ContainerUser $GeoServerLogDir
+    checkrv $? "chown -hR $ContainerUser:$ContainerUser $GeoServerLogDir"
   else
-    log "'$GeoServerLogDir' is already owned by '$GlassfishUser:$GlassfishUser'"
+    log "'$GeoServerLogDir' is already owned by '$ContainerUser:$ContainerUser'"
   fi
 fi
 
@@ -500,6 +546,6 @@ cp $TempDir/geoserver.war $TargetDir
 checkrv $? "cp $TempDir/geoserver.war $TargetDir"
 log "Copied geoserver.war to $TargetDir"
 
-log "** (Re)starting Glassfish domain SMF / service"
-# (Re)start Glassfish domain SMF
+log "** (Re)starting Container domain SMF / service"
+# (Re)start Container domain SMF
 # Confirm that we need to do this ...?
