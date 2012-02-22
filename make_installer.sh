@@ -3,21 +3,23 @@
 # This script takes the parts from the git repo, combines them with
 # downloaded binaries and tars them all up into a tasty treat.
 
-while getopts B:D:P: opt
+while getopts B:D:P:M opt
 do
   case "$opt" in
     B)  DEBUG=$OPTARG;;
     D)  DoDataPack=$OPTARG;;
     P)  SrcDataPack=$OPTARG;;
+    L)  LeavePackage=$OPTARG;;
   esac
 done
 
 # pgsql_binaries will have been tar'ed up relative to /usr/postgres, so the
 # contents are ./opengeo-8.4/*
 
+staging_dir=/export/home/ssmith/solarisinst/
 pkg_name=opengeosuite.tar
-staging_dir=/tmp/solarisinst/
 pwd=`pwd`
+pwd="/export/home/ssmith"
 
 pgsql_binaries="http://data.opengeo.org/solaris/opengeo-pgsql-20120217.tar.gz"
 pgsql_smf_script="smf/postgres_og"
@@ -93,6 +95,7 @@ echo "Prepping package from artifacts ..."
 pushd $staging_dir
 tar cvf $pkg_name * 
 gzip -9 $pkg_name
+
 mv $pkg_name.gz $pwd
 
 # Done
