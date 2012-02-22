@@ -56,7 +56,6 @@ wget -O $staging_dir/resources/geoexplorer.war $geoexplorer_war
 echo "Copy text bits into place ..."
 cp $pgsql_smf_script $staging_dir/resources
 cp $pgsql_smf_manifest $staging_dir/resources
-cp $pgsql_smf_installer $staging_dir
 cp $webapps_installer $staging_dir
 cp $pgsql_installer $staging_dir
 
