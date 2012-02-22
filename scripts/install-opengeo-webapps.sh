@@ -38,6 +38,9 @@
 
   dContainerUser="dcuser"
 
+  dIncludeGeoExplorer="FALSE"
+  IncludeGeoExplorer=$dIncludeGeoExplorer
+
 # ============================================================
 # Script Subroutines
 # ============================================================
@@ -73,6 +76,10 @@ usage() {
   echo "     If TRUE, it clears contents from any of:"
   echo "     InstallLog, TempDir, GeoExplorerDataDir, GeoServerDataDir, and GeoServerLogDir."
   echo ""
+  echo "  X IncludeGeoExplorer (default FALSE)"
+  echo "     Deploy GeoExplorer.WAR to the webapps directory."
+  echo "     Script will not deploy GeoExplorer unless this is set to 'TRUE'"
+  echo ""   
   echo "  E GeoExplorerDataDir (default TargetDir/geoexplorer/data)"
   echo "     Full path to a custom GeoExplorer Data Directory."
   echo "     Script will exit if a custom path is specified but doesn't exist."
@@ -153,6 +160,8 @@ do
         JNDIConnRef=$OPTARG;;
     U)  #echo "  Found the $opt (ContainerUser) option, with value $OPTARG"
         ContainerUser=$OPTARG;;
+    X)  #echo "  Found the $opt (IncludeGeoExplorer) option, with value $OPTARG"
+        IncludeGeoExplorer=$OPTARG;;
     A)  #echo "  Found the $opt (ScriptAction) option, with value $OPTARG"
         ScriptAction=$OPTARG;;
     *) usage;;
@@ -549,9 +558,15 @@ log "** Copying processed WARs to WebAppTarget Directory"
 
 #  Deploy GeoExplorer
 # o Copy WAR to Target Directory
-cp $TempDir/geoexplorer.war $TargetDir
-checkrv $? "cp $TempDir/geoexplorer.war $TargetDir"
-log "Copied geoexplorer.war to $TargetDir"
+
+if [ $IncludeGeoExplorer = "TRUE" ]; then
+  cp $TempDir/geoexplorer.war $TargetDir
+  checkrv $? "cp $TempDir/geoexplorer.war $TargetDir"
+  log "Copied geoexplorer.war to $TargetDir"
+else
+  log "Geoexplorer.war not copied to $TargetDir. Option set to $IncludeGeoExplorer"
+fi
+
 
 # Deploy GeoServer
 # o Copy WAR to Target Directory

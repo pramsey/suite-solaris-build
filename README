@@ -84,6 +84,18 @@ Options:
    Full path to the the log from this installation.
    Will make the specified if it does not exist, or append otherwise.
 
+-M TempDir (default /tmp/opengeo-suite-temp)
+   Full path to the installation's temporary directory.
+   If the directory can't be created the script will exit.
+
+-B DebugMode (default FALSE)
+   If TRUE, it clears contents from any of:
+   InstallLog, TempDir, GeoExplorerDataDir, GeoServerDataDir, and GeoServerLogDir.
+
+-X IncludeGeoExplorer (default FALSE)
+   Deploy GeoExplorer.WAR to the webapps directory.
+   Script will not deploy GeoExplorer unless this is set to 'TRUE'
+
 -E GeoExplorerDataDir (default <TargetDir>/geoexplorer/data)
    Full path to a custom GeoExplorer Data Directory.
    Script will exit if a custom path is specified but doesn't exist.
