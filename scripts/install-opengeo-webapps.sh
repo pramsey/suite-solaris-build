@@ -139,7 +139,7 @@ checkrv() {
 # Poll commandline arguments
 # ============================================================
 
-while getopts B:I:S:T:M:E:G:L:P:J:U:O:A: opt
+while getopts B:I:S:T:M:E:G:L:P:J:U:O:X:A: opt
 do
   case "$opt" in
     B)  #echo "  Found the $opt (Debug/Testing Mode), with value $OPTARG"

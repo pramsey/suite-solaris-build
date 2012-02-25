@@ -116,8 +116,12 @@ Options:
    Custom reference to a container-level JNDI connection string.
    
 -U ContainerUser (default dcuser)
-   Username of the user:group (should be the same) that runs the servlet container process.
+   Username of the user that runs the servlet container process.
    The script makes this user the owner of any custom log/data dirs.
+
+-O ContainerGroup (default dcuser)
+   Groupname of the user that runs the servlet container process.
+   The script makes this group the owner of any custom log/data dirs.
 
 -A ScriptAction (default install)
    Eventual hook for an installation type (install, upgrade, repair, recover, etc.)
