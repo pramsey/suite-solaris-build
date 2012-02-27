@@ -16,10 +16,12 @@ done
 # pgsql_binaries will have been tar'ed up relative to /usr/postgres, so the
 # contents are ./opengeo-8.4/*
 
-staging_dir=/export/home/solarisinst
-pkg_name=opengeosuite.tar
+dt=`date +%Y%m%d`
+staging_dir=$HOME/solarisinst
+pkg_name=opengeosuite-$dt.tar
 pwd=`pwd`
 pwd=/export/home
+
 
 pgsql_binaries="http://data.opengeo.org/solaris/opengeo-pgsql-20120217.tar.gz"
 pgsql_smf_script="smf/postgres_og"
@@ -96,6 +98,10 @@ tar cvf $pkg_name *
 gzip -9 $pkg_name
 
 mv $pkg_name.gz $pwd
+
+echo "------"
+echo "$pkg_name.gz created and moved to $pwd"
+echo "------"
 
 # Done
 exit
