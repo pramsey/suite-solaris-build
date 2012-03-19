@@ -16,7 +16,7 @@ done
 # contents are ./opengeo-8.4/*
 
 pkg_name=opengeosuite.tar
-staging_dir=/tmp/solarisinst/
+staging_dir=${HOME}/solarisinst/
 pwd=`pwd`
 
 pgsql_binaries="http://data.opengeo.org/solaris/opengeo-pgsql-20120217.tar.gz"
