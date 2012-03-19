@@ -1,4 +1,4 @@
-#!/sbin/sh
+#!/bin/bash
 #
 # Copyright 2008 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
@@ -9,6 +9,15 @@
 
 # SMF_FMRI is the name of the target service. This allows multiple instances 
 # to use the same script.
+
+usage() {
+  echo "usage: $0 -D /pgsql/data/path -B /pgsql/bin/path -L /pgsql/log/path"
+  echo ""
+  echo "   This script must be run as the 'postgres' user. "
+  echo "   If run without arguments, it will read startup values from"
+  echo "   the SMF system."
+  echo ""
+}
 
 getproparg() {
         val=`svcprop -p $1 $SMF_FMRI`
@@ -48,9 +57,39 @@ check_data_dir() {
 	fi
 }
 
-PGBIN=`getproparg postgresql_og/bin`
-PGDATA=`getproparg postgresql_og/data`
-PGLOG=`getproparg postgresql_og/log`
+id=`id | grep postgres`
+
+# Read important variables from the commandline
+while getopts B:D:L: opt
+do
+  case "$opt" in
+    B) PGBIN=$OPTARG;;
+    D) PGDATA=$OPTARG;;
+    L) PGLOG=$OPTARG;;
+    *) usage;;
+  esac
+done
+
+# We have to run this script as postgres
+if [ "x" == "x$id" ]; then
+  echo "Error: $0 must be run as user 'postgres'"
+  exit $SMF_EXIT_ERR
+fi
+
+# Read the important variables from SMF if they aren't provided on the
+# commandline
+if [ ! -n $PGBIN ]; then
+  PGBIN=`getproparg postgresql_og/bin`
+  COMMANDLINE=1
+fi
+if [ ! -n $PGDATA ]; then
+  PGDATA=`getproparg postgresql_og/data`
+  COMMANDLINE=1
+fi
+if [ ! -n $PGLOG ]; then
+  PGLOG=`getproparg postgresql_og/log`
+  COMMANDLINE=1
+fi
 
 if [ -z $SMF_FMRI ]; then
 	echo "Error: SMF framework variables are not initialized"
@@ -62,7 +101,7 @@ if [ -z $PGDATA ]; then
         exit $SMF_EXIT_ERR_CONFIG
 fi
 
-if [ -z $PGLOG ]; then
+if [ ! -n $COMMANDLINE ] && [ -z $PGLOG ]; then
         echo "Error: postgresql_og/log property not set"
         exit $SMF_EXIT_ERR_CONFIG
 fi
