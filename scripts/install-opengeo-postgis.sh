@@ -12,7 +12,7 @@ id=`id | grep id=0`
 gtar=/usr/sfw/bin/gtar
 
 usage() {
-  echo "usage: $0 -I /install/path -D /db/path [-L /install/log/file]"
+  echo "usage: $0 -I /install/path -D /db/path [-L /install/log/file] [-C APP|ALL]"
   echo ""
   echo "   Standard Solaris install location is /usr/postgres and db location"
   echo "   is /var/postgres. Recommended install command:"
@@ -42,15 +42,25 @@ checkrv() {
 }
 
 # Check commandline parameters
-while getopts I:D:L: opt
+while getopts I:D:L:C: opt
 do
   case "$opt" in 
     I) install_path=$OPTARG;;
     D) db_path=$OPTARG;;
     L) log_file=$OPTARG;;
+    C) overwrite=$OPTARG;;
     *) usage;;
   esac
 done
+
+# Check that the overwrite parameter uses the correct arguments if
+# it is being used at all
+if [ -n $overwrite ]; then
+  if [ "ALL" != $overwrite ] && [ "APP" != $overwrite ]; then
+     usage
+     exit 1
+  fi
+fi
 
 if [ ! -n "$install_path" ] || [ ! -n "$db_path" ]; then
   usage
@@ -126,7 +136,6 @@ shared_buffer="$shmax$shmax_units"
 log "Using $shared_buffer as shared_buffer size for PostgreSQL"
 
 # Check suitability of the data directory
-#uid=`getfacl $db_path | grep owner | cut -f2 -d: | tr -d ' '` 
 #gid=`getfacl $db_path | grep group | cut -f2 -d: | tr -d ' '`
 uid=`ls -al $db_path | head -2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' ' | tr -d '\n'`
 gid=`ls -al $db_path | head -2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' ' | tr -d '\n'`
@@ -140,12 +149,23 @@ fi
 if [ ! -x $gtar ]; then
   quit "Cannot find $gtar to unpack archive"
 fi
-if [ -d $install_path/$pg_version ]; then
-  quit "There is already software installed at $install_path/$pg_version"
+if [ -d "$install_path/$pg_version" ]; then
+  if [ $overwrite == "APP" ] || [ $overwrite == "ALL" ]; then
+    log "Removing existing software from $install_path/$pg_version "
+    /bin/rm -rf "$install_path/$pg_version"
+    checkrv $? "/bin/rm -rf $install_path/$pg_version"
+  else
+    quit "There is already software installed at $install_path/$pg_version"
+  fi
 fi
+# Untar the software
 log "Untaring $pkg to $install_path"
 $gtar -xf $pkg -C $install_path 
 checkrv $? "$gtar -xf $pkg -C $install_path"
+# Set the ownership to system users
+log "Setting ownership of $install_path/$pg_version to root:bin"
+chown -R root:bin $install_path/$pg_version
+checkrv $? "chown -R root:bin $install_path/$pg_version"
 
 # Install the SMF start script
 svc_name=postgresql_og
@@ -157,6 +177,12 @@ svc_manifest_loc=/var/svc/manifest/application/database/$svc_manifest_xml
 svc_manifest_template=$resources_dir/${svc_manifest_xml}.template
 bin_path=$install_path/$pg_version/bin/64
 data_path=$db_path/$pg_version
+
+if [ -d "$data_path" ] && [ $overwrite == "ALL" ]; then
+  log "Overwriting data directory $data_path"
+  /bin/rm -rf "$data_path"
+  checkrv $? "/bin/rm -rf $data_path"
+fi
 if [ ! -f $svc_script_template ]; then
   quit "Cannot find SMF start script template '$svc_script_template'"
 else
