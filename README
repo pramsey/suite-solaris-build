@@ -18,7 +18,6 @@ su
 export PATH=${PATH}:/usr/local/bin
 export LD_LIBRARY_PATH=/usr/local/lib
 
-
 -------------------------------------------------------------------
 Theory of Operation
 
@@ -29,7 +28,6 @@ Theory of Operation
 * The installer is built with the make_installer.sh script. This script
   downloads the binaries and places the scripts next to them with the 
   right names and so on.
-
 
 -------------------------------------------------------------------
 PostGIS Installation
@@ -61,4 +59,105 @@ The script carries out the following steps
 * Copy the SMF template and script files into place
 * Exit with instructions on the correct svccfg and svcadm commands
 
+-------------------------------------------------------------------
+Suite WebApp Installation
 
+Usage:
+  ./install-opengeo-webapps.sh -S /source/to/targz/package/ -T /war/deploy/dir [options]
+
+Sample:"
+  $0 -S /tmp/opengeo-webapps.tar.gz -T /glassfish3/glassfish/domains/domain1/autodeploy [options] ..."
+
+Required Parameters:
+
+-S SourcePkg (required)
+    Full path to source tarball of the OpenGeo Suite web applications (excluding PostGIS).
+    Script will fail if the path does not exist.
+
+-T TargetDir (required)
+   Full path to the servlet container auto-deploy directory.
+   Script will fail if the path does not exist.
+
+Options:
+
+-I InstallLog (default $(pwd)/install-opengeo-suite.log)
+   Full path to the the log from this installation.
+   Will make the specified if it does not exist, or append otherwise.
+
+-M TempDir (default /tmp/opengeo-suite-temp)
+   Full path to the installation's temporary directory.
+   If the directory can't be created the script will exit.
+
+-B DebugMode (default FALSE)
+   If TRUE, it clears contents from any of:
+   InstallLog, TempDir, GeoExplorerDataDir, GeoServerDataDir, and GeoServerLogDir.
+
+-X IncludeGeoExplorer (default FALSE)
+   Deploy GeoExplorer.WAR to the webapps directory.
+   Script will not deploy GeoExplorer unless this is set to 'TRUE'
+
+-E GeoExplorerDataDir (default <TargetDir>/geoexplorer/data)
+   Full path to a custom GeoExplorer Data Directory.
+   Script will exit if a custom path is specified but doesn't exist.
+   
+-G GeoServerDataDir (default <TargetDir>/geoserver/data)
+   Full path to a custom GeoServer Data Directory.
+   Script will exit if a custom path is specified but doesn't exist.
+   
+-L GeoServerLogDir (default <TargetDir>/geoexplorer/logs)
+   Full path to a custom GeoServer Log Directory.
+   Script will exit if a custom path is specified but doesn't exist.   
+
+-P TemplateDataPack (default data contents of the GeoServer.WAR)
+   Full path to a ZIP file containing a preconfigured GeoServer data directory.
+   Script will exit if a custom data pack is specified but doesn't exist.   
+
+-J JNDIConnRef (default none)
+   Custom reference to a container-level JNDI connection string.
+   
+-U ContainerUser (default dcuser)
+   Username of the user that runs the servlet container process.
+   The script makes this user the owner of any custom log/data dirs.
+
+-O ContainerGroup (default dcuser)
+   Groupname of the user that runs the servlet container process.
+   The script makes this group the owner of any custom log/data dirs.
+
+-A ScriptAction (default install)
+   Eventual hook for an installation type (install, upgrade, repair, recover, etc.)
+   Not used.      
+
+Any other option is unexpected, and envokes the Usage Message and Exits the script.
+
+Workflow:
+
+1) Preamble
+- set bin paths
+- set option default
+- poll command line arguments
+- confirm root
+- confirm logging target
+- clean-up if we're debugging
+
+2) Prep Install Parameters
+- Source package, bail if not there
+- Target dir, bail if not there
+- Temp dir, bail if not there and can't make it
+- GeoExplorer Data Dir, bail if specified but not exists
+- GeoServer Data Dir, bail if specified but not exists
+- GeoServer Log Dir, bail if specified but not exists
+- TemplateDataPack, bail if specified but not exists
+- JNDI connection reference, flag to set if specified
+
+3) Install Actions
+- Confirm bin paths (gtar, zip, unzip)
+- If specified, bake custom GeoExplorer Data Dir into web.xml, and update WAR
+- If specified, bake custom GeoServer Data Dir into web.xml, and update WAR
+- If specified, bake custom GeoServer Log Dir into web.xml, and update WAR
+- If specified, unzip Template Data Pack into Custom GeoServer Data Dir
+- Set permissions for container service user on GeoExplorer Data Dir
+- Set permissions for container service user on GeoServer Data Dir
+- Set permissions for container service user on GeoServer Log Dir
+- Copy GeoServer.war into container target
+- Copy GeoExplorer.war into container target (optional)
+- Restart Container service (optional)

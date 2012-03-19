@@ -38,35 +38,48 @@
 
   dContainerUser="dcuser"
 
+  dIncludeGeoExplorer="FALSE"
+  IncludeGeoExplorer=$dIncludeGeoExplorer
+
 # ============================================================
 # Script Subroutines
 # ============================================================
 
 usage() {
-  echo "Usage: $0 [options] ..."
+  echo "Usage:"
+  echo "  $0 -S /source/to/targz/package/ -T /war/deploy/dir [options]"
   echo ""
-  echo "Options:"
+  echo "Sample:"
+  echo "  $0 -S /tmp/opengeo-webapps.tar.gz -T /glassfish3/glassfish/domains/domain1/autodeploy [Options] ..."
   echo ""
-  echo "  B DebugMode (default FALSE)"
-  echo "     If TRUE, it clears contents from any of:"
-  echo "     InstallLog, TempDir, GeoExplorerDataDir, GeoServerDataDir, and GeoServerLogDir."
+  echo "Required Parameters:"
   echo ""
-  echo "  I InstallLog (default (pwd)/install-opengeo-suite.log)"
-  echo "     Full path to the the log from this installation."
-  echo "     Will make the specified if it does not exist, or append otherwise."
-  echo ""
-  echo "  S SourcePkg (default (pwd)/pkg/opengeo-suite.2.4.3-ee-solaris.tar)"
+  echo "  S SourcePkg (required)"
   echo "     Full path to source tarball of the OpenGeo Suite web applications (excluding PostGIS)."
   echo "     Script will fail if the path does not exist."
   echo ""
-  echo "  T TargetDir (default /glassfish3/glassfish/domains/domain1/autodeploy)"
+  echo "  T TargetDir (required)"
   echo "     Full path to the servlet container auto-deploy directory."
   echo "     Script will fail if the path does not exist."
+  echo ""
+  echo "Options:"
+  echo ""
+  echo "  I InstallLog (default (pwd)/install-opengeo-suite.log)"
+  echo "     Full path to the the log from this installation."
+  echo "     Will make the specified file if it does not exist, or append otherwise."
   echo ""
   echo "  M TempDir (default /tmp/opengeo-suite-temp)"
   echo "     Full path to the installation's temporary directory."
   echo "     If the directory can't be created the script will exit."
   echo ""
+  echo "  B DebugMode (default FALSE)"
+  echo "     If TRUE, it clears contents from any of:"
+  echo "     InstallLog, TempDir, GeoExplorerDataDir, GeoServerDataDir, and GeoServerLogDir."
+  echo ""
+  echo "  X IncludeGeoExplorer (default FALSE)"
+  echo "     Deploy GeoExplorer.WAR to the webapps directory."
+  echo "     Script will not deploy GeoExplorer unless this is set to 'TRUE'"
+  echo ""   
   echo "  E GeoExplorerDataDir (default TargetDir/geoexplorer/data)"
   echo "     Full path to a custom GeoExplorer Data Directory."
   echo "     Script will exit if a custom path is specified but doesn't exist."
@@ -87,8 +100,12 @@ usage() {
   echo "     Custom reference to a container-level JNDI connection string."
   echo ""   
   echo "  U ContainerUser (default dcuser)"
-  echo "     Username of the user:group (should be the same) that runs the servlet container process."
+  echo "     Username of the user that runs the servlet container process."
   echo "     The script makes this user the owner of any custom log/data dirs."
+  echo ""
+  echo "  O ContainerGroup (default dcuser)"
+  echo "     Groupname of the user that runs the servlet container process."
+  echo "     The script makes this group the owner of any custom log/data dirs."
   echo ""
   echo "  A ScriptAction (default install)"
   echo "     Eventual hook for an installation type (install, upgrade, repair, recover, etc.)"
@@ -122,7 +139,7 @@ checkrv() {
 # Poll commandline arguments
 # ============================================================
 
-while getopts B:I:S:T:M:E:G:L:P:J:U:A: opt
+while getopts B:I:S:T:M:E:G:L:P:J:U:O:X:A: opt
 do
   case "$opt" in
     B)  #echo "  Found the $opt (Debug/Testing Mode), with value $OPTARG"
@@ -147,6 +164,10 @@ do
         JNDIConnRef=$OPTARG;;
     U)  #echo "  Found the $opt (ContainerUser) option, with value $OPTARG"
         ContainerUser=$OPTARG;;
+    O)  #echo "  Found the $opt (ContainerGroup) option, with value $OPTARG"
+        ContainerGroup=$OPTARG;;
+    X)  #echo "  Found the $opt (IncludeGeoExplorer) option, with value $OPTARG"
+        IncludeGeoExplorer=$OPTARG;;
     A)  #echo "  Found the $opt (ScriptAction) option, with value $OPTARG"
         ScriptAction=$OPTARG;;
     *) usage;;
@@ -155,6 +176,13 @@ done
 
 echo ""
 echo "Preamble ..."
+
+# Check required parameters.
+# ============================================================
+
+if [ "x$SourcePkg" == "x" ] || [ "x$TargetDir" == "x" ]; then
+  usage
+fi
 
 # Are we effectively root? Yes, go. No, bail.
 # ============================================================
@@ -363,10 +391,10 @@ else
   log "Using the value provided $JNDIConnRef"
 fi
 
-# o Container Service User # * Yes, action # * No, use default
+# o Container Service User and Group # * Yes, action # * No, use default
 # ============================================================
 
-log "** Container User (-U)"
+log "** Container User (-U) and Group (-O)"
 
 if [ "x" == "x$ContainerUser" ]; then
   log "Not specified on the commandline ..."
@@ -375,6 +403,15 @@ if [ "x" == "x$ContainerUser" ]; then
 else
   log "Found on the commandline ..."
   log "Using the value provided $ContainerUser"
+fi
+
+if [ "x" == "x$ContainerGroup" ]; then
+  log "Not specified on the commandline ..."
+  log "Will use default $dContainerUser."
+  ContainerGroup=$dContainerUser
+else
+  log "Found on the commandline ..."
+  log "Using the value provided $ContainerGroup"
 fi
 
 # ============================================================
@@ -497,12 +534,12 @@ log "** Directory Permissions"
 if [ "$GeoExplorerDataDir" != "0" ]; then
   uid=`ls -al $GeoExplorerDataDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
   gid=`ls -al $GeoExplorerDataDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
-  if [ "$uid" != "$ContainerUser" ] || [ "$gid" != "$ContainerUser" ]; then
-    log "Updating permissions on GeoExplorerDataDir for $ContainerUser"
-    chown -hR $ContainerUser:$ContainerUser $GeoExplorerDataDir
-    checkrv $? "chown -hR $ContainerUser:$ContainerUser $GeoExplorerDataDir"
+  if [ "$uid" != "$ContainerUser" ] || [ "$gid" != "$ContainerGroup" ]; then
+    log "Updating permissions on GeoExplorerDataDir for $ContainerUser:$ContainerGroup"
+    chown -hR $ContainerUser:$ContainerGroup $GeoExplorerDataDir
+    checkrv $? "chown -hR $ContainerUser:$ContainerGroup $GeoExplorerDataDir"
   else
-    log "'$GeoExplorerDataDir' is already owned by '$ContainerUser$ContainerUser'"
+    log "'$GeoExplorerDataDir' is already owned by '$ContainerUser:$ContainerGroup'"
   fi
 fi
 
@@ -510,12 +547,12 @@ fi
 if [ "$GeoServerDataDir" != "0" ]; then  
   uid=`ls -al $GeoServerDataDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
   gid=`ls -al $GeoServerDataDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
-  if [ "$uid" != "$ContainerUser" ] || [ "$gid" != "$ContainerUser" ]; then
-    log "Updating permissions on GeoServerDataDir for $ContainerUser"
-    chown -hR $ContainerUser:$ContainerUser $GeoServerDataDir
-    checkrv $? "chown -hR $ContainerUser:$ContainerUser $GeoServerDataDir"
+  if [ "$uid" != "$ContainerUser" ] || [ "$gid" != "$ContainerGroup" ]; then
+    log "Updating permissions on GeoServerDataDir for $ContainerUser:$ContainerGroup"
+    chown -hR $ContainerUser:$ContainerGroup $GeoServerDataDir
+    checkrv $? "chown -hR $ContainerUser:$ContainerGroup $GeoServerDataDir"
   else
-    log "'$GeoServerDataDir' is already owned by '$ContainerUser:$ContainerUser'"
+    log "'$GeoServerDataDir' is already owned by '$ContainerUser:$ContainerGroup'"
   fi
 fi
 
@@ -523,12 +560,12 @@ fi
 if [ "$GeoServerLogDir" != "0" ]; then  
   uid=`ls -al $GeoServerLogDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f3 -d' '`
   gid=`ls -al $GeoServerLogDir | head -n2 | tail +1 | sed -e 's/[ ][ ]*/ /g' | cut -f4 -d' '`
-  if [ "$uid" != "$ContainerUser" ] || [ "$gid" != "$ContainerUser" ]; then
-    log "Updating permissions on GeoServerLogDir for $ContainerUser"
-    chown -hR $ContainerUser:$ContainerUser $GeoServerLogDir
-    checkrv $? "chown -hR $ContainerUser:$ContainerUser $GeoServerLogDir"
+  if [ "$uid" != "$ContainerUser" ] || [ "$gid" != "$ContainerGroup" ]; then
+    log "Updating permissions on GeoServerLogDir for $ContainerUser:$ContainerGroup"
+    chown -hR $ContainerUser:$ContainerGroup $GeoServerLogDir
+    checkrv $? "chown -hR $ContainerUser:$ContainerGroup $GeoServerLogDir"
   else
-    log "'$GeoServerLogDir' is already owned by '$ContainerUser:$ContainerUser'"
+    log "'$GeoServerLogDir' is already owned by '$ContainerUser:$ContainerGroup'"
   fi
 fi
 
@@ -536,9 +573,15 @@ log "** Copying processed WARs to WebAppTarget Directory"
 
 #  Deploy GeoExplorer
 # o Copy WAR to Target Directory
-cp $TempDir/geoexplorer.war $TargetDir
-checkrv $? "cp $TempDir/geoexplorer.war $TargetDir"
-log "Copied geoexplorer.war to $TargetDir"
+
+if [ $IncludeGeoExplorer = "TRUE" ]; then
+  cp $TempDir/geoexplorer.war $TargetDir
+  checkrv $? "cp $TempDir/geoexplorer.war $TargetDir"
+  log "Copied geoexplorer.war to $TargetDir"
+else
+  log "Geoexplorer.war not copied to $TargetDir. Option set to $IncludeGeoExplorer"
+fi
+
 
 # Deploy GeoServer
 # o Copy WAR to Target Directory
