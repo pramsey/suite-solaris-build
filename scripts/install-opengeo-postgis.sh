@@ -168,21 +168,30 @@ chown -R root:bin $install_path/$pg_version
 checkrv $? "chown -R root:bin $install_path/$pg_version"
 
 # Install the SMF start script
+init_script_name=postgres_og_init
+init_script_template=${resources_dir}/${init_script_name}.template
+init_script_loc=${install_path}/${pg_version}/${init_script_name}
+
 svc_name=postgresql_og
 svc_script_name=postgres_og
-svc_script_loc=/lib/svc/method/$svc_script_name
-svc_script_template=$resources_dir/$svc_script_name
-svc_manifest_xml=${svc_name}.xml
-svc_manifest_loc=/var/svc/manifest/application/database/$svc_manifest_xml
-svc_manifest_template=$resources_dir/${svc_manifest_xml}.template
-bin_path=$install_path/$pg_version/bin/64
-data_path=$db_path/$pg_version
+svc_script_loc=/lib/svc/method/${svc_script_name}
+svc_script_template=$resources_dir/${svc_script_name}
 
+svc_manifest_xml=${svc_name}.xml
+svc_manifest_loc=/var/svc/manifest/application/database/${svc_manifest_xml}
+svc_manifest_template=${resources_dir}/${svc_manifest_xml}.template
+
+bin_path=${install_path}/${pg_version}/bin/64
+data_path=${db_path}/${pg_version}
+
+# Overwrite case?
 if [ -d "$data_path" ] && [ $overwrite == "ALL" ]; then
   log "Overwriting data directory $data_path"
   /bin/rm -rf "$data_path"
   checkrv $? "/bin/rm -rf $data_path"
 fi
+
+# Check for corner case failures
 if [ ! -f $svc_script_template ]; then
   quit "Cannot find SMF start script template '$svc_script_template'"
 else
@@ -204,6 +213,13 @@ sed s,@bin@,$bin_path, $svc_manifest_template | \
   sed s,@data@,$data_path, > \
   $svc_manifest_loc
 log "Installed ${svc_manifest_loc}"
+
+# Write data and bin locations into the startup script
+sed s,@bin@,$bin_path, $init_script_template | \
+  sed s,@data@,$data_path, > \
+  $init_script_loc
+chmod 755 ${init_script_loc}
+log "Installed ${init_script_loc}"
 
 # Add the install library locations to the system library path
 /usr/bin/crle -u -l $install_path/$pg_version/lib

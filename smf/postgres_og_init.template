@@ -1,0 +1,89 @@
+#!/bin/bash
+#
+# Copyright 2012 OpenGeo, Inc.  All rights reserved.
+#
+
+STATUS_ERR=1
+STATUS_OK=0
+
+check_data_dir() {
+	if [ ! -d $PGDATA ]; then
+                /bin/mkdir $PGDATA
+		if [ ! -d $PGDATA ]; then
+			echo "Error: postgresql_og/data directory $PGDATA does not exist and could not be created"
+			exit $STATUS_ERR
+		fi
+	fi
+
+	if [ ! -w $PGDATA ]; then
+		echo "Error: postgresql_og/data directory $PGDATA is not writable by postgres"
+		exit $STATUS_ERR
+	fi
+
+	if [ ! -d $PGDATA/base -o ! -d $PGDATA/global -o ! -f $PGDATA/PG_VERSION ]; then
+		# If the directory is empty we can create the database files
+		# on behalf of the user using initdb
+		if [ `ls -a $PGDATA | wc -w` -le 2 ]; then
+			echo "Notice: postgresql_og/data directory $PGDATA is empty"
+			echo "Calling '$PGBIN/initdb -D $PGDATA' to initialize"
+
+			$PGBIN/initdb -D $PGDATA
+			if [ $? -ne 0 ]; then
+				echo "Error: initdb failed"
+				exit $STATUS_ERR
+			fi
+		else
+			echo "Error: postgresql_og/data directory $PGDATA is not empty, nor is it a valid PostgreSQL data directory"
+			exit $STATUS_ERR
+		fi
+	fi
+}
+
+PGBIN=@bin@
+PGDATA=@data@
+PGLOG=server.log
+
+id=`id | grep postgres`
+
+if [ "x" = "x$id" ]; then
+        echo "Error: $0 must be run as the 'postgres' user"
+	exit $STATUS_ERR
+fi
+
+if [ ! -d $PGBIN ]; then
+        echo "Error: PGBIN ($PGBIN) does not exist"
+	exit $STATUS_ERR
+fi
+
+for x in pg_ctl psql initdb; do
+	if [ ! -x $PGBIN/$x ]; then
+		echo "Error: Cannot find $PGBIN/$x"
+		exit $STATUS_ERR
+	fi
+done
+
+case "$1" in
+'start')
+	check_data_dir
+        $PGBIN/pg_ctl -D $PGDATA -l $PGDATA/$PGLOG start
+        ;;
+
+'stop')
+        $PGBIN/pg_ctl -D $PGDATA -m fast stop
+        ;;
+
+'stopnow')
+        $PGBIN/pg_ctl -D $PGDATA -m immediate stop
+        ;;
+
+'reload')
+        $PGBIN/pg_ctl -D $PGDATA reload
+        ;;
+
+*)
+	echo "usage: $0 start|reload|stop|stopnow"
+	exit $STATUS_OK
+        ;;
+
+esac
+exit $STATUS_OK
