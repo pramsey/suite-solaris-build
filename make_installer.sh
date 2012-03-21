@@ -26,6 +26,7 @@ pwd=/export/home
 pgsql_binaries="http://data.opengeo.org/solaris/opengeo-pgsql-20120217.tar.gz"
 pgsql_smf_script="smf/postgres_og"
 pgsql_smf_manifest="smf/postgresql_og.xml.template"
+pgsql_init_script="smf/postgres_og_init.template"
 pgsql_installer="scripts/install-opengeo-postgis.sh"
 
 geoserver_war=http://data.opengeo.org/solaris/geoserver.war
@@ -60,6 +61,7 @@ wget -O $staging_dir/resources/geoexplorer.war $geoexplorer_war
 echo "Copy text bits into place ..."
 cp $pgsql_smf_script $staging_dir/resources
 cp $pgsql_smf_manifest $staging_dir/resources
+cp $pgsql_init_script $staging_dir/resources
 cp $webapps_installer $staging_dir
 cp $pgsql_installer $staging_dir
 
