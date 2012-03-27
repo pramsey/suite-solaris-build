@@ -107,6 +107,10 @@ usage() {
   echo "     Groupname of the user that runs the servlet container process."
   echo "     The script makes this group the owner of any custom log/data dirs."
   echo ""
+  echo "  V OverwriteExisting (default none)"
+  echo "     If we find existing data/binary directories do we over-write them?"
+  echo "     APP overwrites binaries / ALL overwrites binaries and data."
+  echo ""
   echo "  A ScriptAction (default install)"
   echo "     Eventual hook for an installation type (install, upgrade, repair, recover, etc.)"
   echo "     Not used."
@@ -139,7 +143,7 @@ checkrv() {
 # Poll commandline arguments
 # ============================================================
 
-while getopts B:I:S:T:M:E:G:L:P:J:U:O:X:A: opt
+while getopts B:I:S:T:M:E:G:L:P:J:U:O:X:V:A: opt
 do
   case "$opt" in
     B)  #echo "  Found the $opt (Debug/Testing Mode), with value $OPTARG"
@@ -168,6 +172,8 @@ do
         ContainerGroup=$OPTARG;;
     X)  #echo "  Found the $opt (IncludeGeoExplorer) option, with value $OPTARG"
         IncludeGeoExplorer=$OPTARG;;
+    V)  #echo "  Found the $opt (OverwriteExisting) option, with value $OPTARG"
+        OverwriteExisting=$OPTARG;;
     A)  #echo "  Found the $opt (ScriptAction) option, with value $OPTARG"
         ScriptAction=$OPTARG;;
     *) usage;;
@@ -277,6 +283,12 @@ if [ ! -d $TargetDir ]; then
 else
   log "Found target directory $TargetDir"
 fi
+
+if [ -f "$TargetDir/geoserver.war" ] || [ -f "$TargetDir/geoexplorer.war" ]; then
+  if [ "$OverwriteExisting" == "ALL"] || [ "$OverwriteExisting" == "APP"]; then 
+    quit "Binaries exist in target directory ($TargetDir) and overwrite directive (-V) not set."
+  fi
+fi 
 
 # o Temp directory for unpacking
 # ============================================================
