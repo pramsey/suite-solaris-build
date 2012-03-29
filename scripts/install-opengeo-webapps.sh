@@ -285,8 +285,10 @@ else
 fi
 
 if [ -f "$TargetDir/geoserver.war" ] || [ -f "$TargetDir/geoexplorer.war" ]; then
-  if [ "$OverwriteExisting" == "ALL"] || [ "$OverwriteExisting" == "APP"]; then 
-    quit "Binaries exist in target directory ($TargetDir) and overwrite directive (-V) not set."
+  if [ "$OverwriteExisting" == "ALL" ] || [ "$OverwriteExisting" == "APP" ]; then 
+    log "Binaries exist in target directory and overwrite directive (-V) is set to $OverwriteExisting. Overwriting."
+  else
+    quit "Binaries exist in target directory ($TargetDir) and overwrite directive (-V) not set, or not set to overwrite ($OverwriteExisting)."
   fi
 fi 
 
@@ -538,7 +540,7 @@ else
 fi
 
 # Check/Set directory permissions for GFish user 
-# [[[]]] TODO iterate this ???
+# [[[]]] TODO - iterate this
 
 log "** Directory Permissions"
 
@@ -593,7 +595,6 @@ if [ $IncludeGeoExplorer = "TRUE" ]; then
 else
   log "Geoexplorer.war not copied to $TargetDir. Option set to $IncludeGeoExplorer"
 fi
-
 
 # Deploy GeoServer
 # o Copy WAR to Target Directory
