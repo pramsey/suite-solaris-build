@@ -532,8 +532,15 @@ fi
 log "** Custom Template Data Pack"
 if [ ! $TemplateDataPack == 0 ]; then
   log "Importing TemplateDataPack"
-  # sfs unpack the tempate data file into the data dir
-  $UnZipPath $TemplateDataPack -d $GeoServerDataDir
+  if [ ! "x$(ls -A $GeoServerDataDir)" == "x" ]; then
+    if [ "$OverwriteExisting" == "ALL" ] || [ "$OverwriteExisting" == "DATA" ]; then 
+      log "Data exist in the GeoServer data directory and overwrite directive (-V) is set to $OverwriteExisting. Overwriting."
+    else
+      quit "Data exists in GeoServer data directory ($TargetDir) and overwrite directive (-V) not set, or not set to overwrite  ($OverwriteExisting)."
+    fi
+  fi
+  # unpack the tempate data file into the data dir
+  $UnZipPath -f $TemplateDataPack -d $GeoServerDataDir
   checkrv $? "$UnZipPath $TemplateDataPack -d $GeoServerDataDir"
 else
   log "Nothing to do ... Using stock data"  
