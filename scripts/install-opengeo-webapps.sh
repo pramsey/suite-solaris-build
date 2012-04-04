@@ -107,9 +107,9 @@ usage() {
   echo "     Groupname of the user that runs the servlet container process."
   echo "     The script makes this group the owner of any custom log/data dirs."
   echo ""
-  echo "  V OverwriteExisting (default none)"
+  echo "  C OverwriteExisting (default none)"
   echo "     If we find existing data/binary directories do we over-write them?"
-  echo "     APP overwrites binaries / ALL overwrites binaries and data."
+  echo "     APP overwrites binaries / DATA overwrites data / ALL overwrites both."
   echo ""
   echo "  A ScriptAction (default install)"
   echo "     Eventual hook for an installation type (install, upgrade, repair, recover, etc.)"
@@ -143,7 +143,7 @@ checkrv() {
 # Poll commandline arguments
 # ============================================================
 
-while getopts B:I:S:T:M:E:G:L:P:J:U:O:X:V:A: opt
+while getopts B:I:S:T:M:E:G:L:P:J:U:O:X:C:A: opt
 do
   case "$opt" in
     B)  #echo "  Found the $opt (Debug/Testing Mode), with value $OPTARG"
@@ -172,7 +172,7 @@ do
         ContainerGroup=$OPTARG;;
     X)  #echo "  Found the $opt (IncludeGeoExplorer) option, with value $OPTARG"
         IncludeGeoExplorer=$OPTARG;;
-    V)  #echo "  Found the $opt (OverwriteExisting) option, with value $OPTARG"
+    C)  #echo "  Found the $opt (OverwriteExisting) option, with value $OPTARG"
         OverwriteExisting=$OPTARG;;
     A)  #echo "  Found the $opt (ScriptAction) option, with value $OPTARG"
         ScriptAction=$OPTARG;;
@@ -286,9 +286,9 @@ fi
 
 if [ -f "$TargetDir/geoserver.war" ] || [ -f "$TargetDir/geoexplorer.war" ]; then
   if [ "$OverwriteExisting" == "ALL" ] || [ "$OverwriteExisting" == "APP" ]; then 
-    log "Binaries exist in target directory and overwrite directive (-V) is set to $OverwriteExisting. Overwriting."
+    log "Binaries exist in target directory and overwrite directive (-C) is set to $OverwriteExisting. Overwriting."
   else
-    quit "Binaries exist in target directory ($TargetDir) and overwrite directive (-V) not set, or not set to overwrite ($OverwriteExisting)."
+    quit "Binaries exist in target directory ($TargetDir) and overwrite directive (-C) not set, or not set to overwrite ($OverwriteExisting)."
   fi
 fi 
 
@@ -534,9 +534,9 @@ if [ ! $TemplateDataPack == 0 ]; then
   log "Importing TemplateDataPack"
   if [ ! "x$(ls -A $GeoServerDataDir)" == "x" ]; then
     if [ "$OverwriteExisting" == "ALL" ] || [ "$OverwriteExisting" == "DATA" ]; then 
-      log "Data exist in the GeoServer data directory and overwrite directive (-V) is set to $OverwriteExisting. Overwriting."
+      log "Data exist in the GeoServer data directory and overwrite directive (-c) is set to $OverwriteExisting. Overwriting."
     else
-      quit "Data exists in GeoServer data directory ($TargetDir) and overwrite directive (-V) not set, or not set to overwrite  ($OverwriteExisting)."
+      quit "Data exists in GeoServer data directory ($TargetDir) and overwrite directive (-C) not set, or not set to overwrite  ($OverwriteExisting)."
     fi
   fi
   # unpack the tempate data file into the data dir
