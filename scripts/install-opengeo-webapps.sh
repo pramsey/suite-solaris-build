@@ -492,7 +492,7 @@ if [ $GeoServerDataDir == 0 ]; then
   log "Nothing to do ... Using default GeoServerDataDir."
 else
   oldvalue="<!--CustomGeoServerDataDir-->"
-  newvalue="<context-param><param-name>GEOSERVER_DATA_DIR<\/param-name><param-value>${GeoServerDataDir//$match/$replace}<\/param-value><\/context-param>"
+  newvalue="<context-param><param-name>GEOSERVER_DATA_DIR<\/param-name><param-value>${GeoServerDataDir//$match/$replace}/geoserver.log<\/param-value><\/context-param>"
   log "Writing custom GeoServer DataDir to template configuration file"
   log "($newvalue)"
   sedfile=$TempDir/geoserver/WEB-INF/web.xml
