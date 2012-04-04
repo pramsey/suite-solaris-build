@@ -492,7 +492,7 @@ if [ $GeoServerDataDir == 0 ]; then
   log "Nothing to do ... Using default GeoServerDataDir."
 else
   oldvalue="<!--CustomGeoServerDataDir-->"
-  newvalue="<context-param><param-name>GEOSERVER_DATA_DIR<\/param-name><param-value>${GeoServerDataDir//$match/$replace}/geoserver.log<\/param-value><\/context-param>"
+  newvalue="<context-param><param-name>GEOSERVER_DATA_DIR<\/param-name><param-value>${GeoServerDataDir//$match/$replace}<\/param-value><\/context-param>"
   log "Writing custom GeoServer DataDir to template configuration file"
   log "($newvalue)"
   sedfile=$TempDir/geoserver/WEB-INF/web.xml
@@ -506,13 +506,14 @@ if [ $GeoServerLogDir == 0 ]; then
   log "Nothing to do ... Using default GeoServerLogDir."
 else
   oldvalue="<!--CustomGeoServerLogDir-->"
-  newvalue="<context-param><param-name>GEOSERVER_LOG_LOCATION<\/param-name><param-value>${GeoServerLogDir//$match/$replace}<\/param-value><\/context-param>"
+  newvalue="<context-param><param-name>GEOSERVER_LOG_LOCATION<\/param-name><param-value>${GeoServerLogDir//$match/$replace}\/geoserver.log<\/param-value><\/context-param>"
   log "Writing custom GeoServer LogDir to template configuration file"
   log "($newvalue)"
   sedfile=$TempDir/geoserver/WEB-INF/web.xml
   sedtemp=$TempDir/geoserver/WEB-INF/web.xml.tmp
   sed s/$oldvalue/$newvalue/g $sedfile > $sedtemp && mv $sedtemp $sedfile 
   checkrv $? "sed s/$oldvalue/$newvalue/g $sedfile > $sedtemp && mv $sedtemp $sedfile"
+  touch "$GeoServerLogDir/geoserver.log"
 fi
 
 # if we did something here, repack the WAR
