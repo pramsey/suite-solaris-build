@@ -19,8 +19,7 @@ done
 dt=`date +%Y%m%d`
 staging_dir=$HOME/solarisinst
 pkg_name=opengeosuite-$dt.tar
-pwd=`pwd`
-pwd=/export/home
+pwd=$HOME
 
 
 pgsql_binaries="http://data.opengeo.org/solaris/opengeo-pgsql-20120217.tar.gz"

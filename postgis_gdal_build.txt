@@ -18,25 +18,29 @@
   cd /usr/swf/bin
   ln -s gmake make
 
+# Export the PGVER
+  export PGVER=8.4
+
 # Add install location
-  mkdir /usr/postgres/opengeo-8.4
-  chown user:other /usr/postgres/opengeo-8.4
+  mkdir /usr/postgres/opengeo-${PGVER}
+  chown user:other /usr/postgres/opengeo-${PGVER}
 
 ###############################################################
 # Build readline
   wget ftp://ftp.sunfreeware.com/pub/freeware/SOURCES/readline-5.2.tar.gz
+  wget http://ftp.gnu.org/gnu/readline/readline-5.2.tar.gz
 
   # 32 bit
-  CC="gcc" ./configure --prefix=/usr/postgres/opengeo-8.4 \
+  CC="gcc" ./configure --prefix=/usr/postgres/opengeo-${PGVER} \
   && make clean all \
   && make install
 
   # 64 bit
   CC="gcc -m64" ./configure \
-    --libdir=/usr/postgres/opengeo-8.4/lib/64 \
-    --infodir=/usr/postgres/opengeo-8.4/info/ \
-    --mandir=/usr/postgres/opengeo-8.4/man/ \
-    --includedir=/usr/postgres/opengeo-8.4/include/64 \
+    --libdir=/usr/postgres/opengeo-${PGVER}/lib/64 \
+    --infodir=/usr/postgres/opengeo-${PGVER}/info/ \
+    --mandir=/usr/postgres/opengeo-${PGVER}/man/ \
+    --includedir=/usr/postgres/opengeo-${PGVER}/include/64 \
   && make clean all \
   && make install
 
@@ -45,15 +49,15 @@
   wget http://download.osgeo.org/proj/proj-4.7.0.tar.gz
   wget http://download.osgeo.org/proj/proj-datumgrid-1.5.zip
 
-  CC="gcc" ./configure --prefix=/usr/postgres/opengeo-8.4 \
+  CC="gcc" ./configure --prefix=/usr/postgres/opengeo-${PGVER} \
   && make clean all \
   && make install
 
   CC="gcc -m64" ./configure \
-    --prefix=/usr/postgres/opengeo-8.4 \
-    --libdir=/usr/postgres/opengeo-8.4/lib/64 \
-    --includedir=/usr/postgres/opengeo-8.4/include/64 \
-    --bindir=/usr/postgres/opengeo-8.4/bin/64 \
+    --prefix=/usr/postgres/opengeo-${PGVER} \
+    --libdir=/usr/postgres/opengeo-${PGVER}/lib/64 \
+    --includedir=/usr/postgres/opengeo-${PGVER}/include/64 \
+    --bindir=/usr/postgres/opengeo-${PGVER}/bin/64 \
   && make clean all \
   && make install
 
@@ -62,15 +66,15 @@
 # Build GEOS
   wget http://download.osgeo.org/geos/geos-3.3.2.tar.bz2
 
-  CC="gcc" CXX="g++" ./configure --prefix=/usr/postgres/opengeo-8.4 \
+  CC="gcc" CXX="g++" ./configure --prefix=/usr/postgres/opengeo-${PGVER} \
   && make clean all \
   && make install
     
   CC="gcc -m64" CXX="g++ -m64" ./configure \
-    --prefix=/usr/postgres/opengeo-8.4 \
-    --libdir=/usr/postgres/opengeo-8.4/lib/64 \
-    --bindir=/usr/postgres/opengeo-8.4/bin/64 \
-    --includedir=/usr/postgres/opengeo-8.4/include/64 \
+    --prefix=/usr/postgres/opengeo-${PGVER} \
+    --libdir=/usr/postgres/opengeo-${PGVER}/lib/64 \
+    --bindir=/usr/postgres/opengeo-${PGVER}/bin/64 \
+    --includedir=/usr/postgres/opengeo-${PGVER}/include/64 \
   && make clean all \
   && make install
 
@@ -80,13 +84,13 @@
 # configure will fail to find it. 
 # for 32-bit
 # cd /usr/lib
-# ln -s /usr/postgres/opengeo-8.4/lib/libreadline.so.5 libreadline.so.5
-# ln -s /usr/postgres/opengeo-8.4/lib/libreadline.so.5 libreadline.so
+# ln -s /usr/postgres/opengeo-${PGVER}/lib/libreadline.so.5 libreadline.so.5
+# ln -s /usr/postgres/opengeo-${PGVER}/lib/libreadline.so.5 libreadline.so
 
 # for 64-bit
 # cd /usr/lib/64
-# ln -s /usr/postgres/opengeo-8.4/lib/64/libreadline.so.5 libreadline.so.5
-# ln -s /usr/postgres/opengeo-8.4/lib/64/libreadline.so.5 libreadline.so
+# ln -s /usr/postgres/opengeo-${PGVER}/lib/64/libreadline.so.5 libreadline.so.5
+# ln -s /usr/postgres/opengeo-${PGVER}/lib/64/libreadline.so.5 libreadline.so
 
 
 ###############################################################
@@ -96,23 +100,23 @@
 
 ###############################################################
 # Get PostgreSQL
- wget http://ftp.postgresql.org/pub/source/v8.4.10/postgresql-8.4.10.tar.bz2
+ wget http://ftp.postgresql.org/pub/source/v${PGVER}.10/postgresql-${PGVER}.10.tar.bz2
 
 ###############################################################
 # Build PostgreSQL (32)
 
   CC="gcc" CXX="g++" ./configure \
-    --prefix=/usr/postgres/opengeo-8.4 \
+    --prefix=/usr/postgres/opengeo-${PGVER} \
     --with-system-tzdata=/usr/share/lib/zoneinfo \
-    --localstatedir=/var/postgres/opengeo-8.4 \
-    --sharedstatedir=/var/postgres/opengeo-8.4 \
+    --localstatedir=/var/postgres/opengeo-${PGVER} \
+    --sharedstatedir=/var/postgres/opengeo-${PGVER} \
     --with-pam \
     --with-openssl \
     --with-libxml \
     --enable-nls \
     --with-libxslt \
-    --with-includes="/usr/sfw/include /usr/postgres/opengeo-8.4/include" \
-    --with-libraries="/usr/sfw/lib /usr/postgres/opengeo-8.4/lib" \
+    --with-includes="/usr/sfw/include /usr/postgres/opengeo-${PGVER}/include" \
+    --with-libraries="/usr/sfw/lib /usr/postgres/opengeo-${PGVER}/lib" \
   && make clean all \
   && make install \
   && cd contrib \
@@ -124,27 +128,27 @@
 # Build PostgreSQL (64)
 
   CC="gcc -m64" CXX="g++ -m64" ./configure \
-    --prefix=/usr/postgres/opengeo-8.4 \
-    --exec-prefix=/usr/postgres/opengeo-8.4 \
-    --bindir=/usr/postgres/opengeo-8.4/bin/64 \
-    --libexecdir=/usr/postgres/opengeo-8.4/bin/64 \
-    --sbindir=/usr/postgres/opengeo-8.4/bin/64 \
-    --datadir=/usr/postgres/opengeo-8.4/share \
-    --sysconfdir=/usr/postgres/opengeo-8.4/etc \
-    --mandir=/usr/postgres/opengeo-8.4/man \
-    --libdir=/usr/postgres/opengeo-8.4/lib/64 \
-    --includedir=/usr/postgres/opengeo-8.4/include/64 \
-    --with-docdir=/usr/postgres/opengeo-8.4/doc \
-    --sharedstatedir=/var/postgres/opengeo-8.4 \
-    --localstatedir=/var/postgres/opengeo-8.4 \
+    --prefix=/usr/postgres/opengeo-${PGVER} \
+    --exec-prefix=/usr/postgres/opengeo-${PGVER} \
+    --bindir=/usr/postgres/opengeo-${PGVER}/bin/64 \
+    --libexecdir=/usr/postgres/opengeo-${PGVER}/bin/64 \
+    --sbindir=/usr/postgres/opengeo-${PGVER}/bin/64 \
+    --datadir=/usr/postgres/opengeo-${PGVER}/share \
+    --sysconfdir=/usr/postgres/opengeo-${PGVER}/etc \
+    --mandir=/usr/postgres/opengeo-${PGVER}/man \
+    --libdir=/usr/postgres/opengeo-${PGVER}/lib/64 \
+    --includedir=/usr/postgres/opengeo-${PGVER}/include/64 \
+    --with-docdir=/usr/postgres/opengeo-${PGVER}/doc \
+    --sharedstatedir=/var/postgres/opengeo-${PGVER} \
+    --localstatedir=/var/postgres/opengeo-${PGVER} \
     --with-system-tzdata=/usr/share/lib/zoneinfo \
     --with-pam \
     --with-openssl \
     --with-libxml \
     --with-libxslt \
     --enable-nls \
-    --with-includes="/usr/sfw/include /usr/postgres/opengeo-8.4/include/64" \
-    --with-libraries="/usr/sfw/lib/64 /usr/postgres/opengeo-8.4/lib/64" \
+    --with-includes="/usr/sfw/include /usr/postgres/opengeo-${PGVER}/include/64" \
+    --with-libraries="/usr/sfw/lib/64 /usr/postgres/opengeo-${PGVER}/lib/64" \
   && make clean all \
   && make install \
   && cd contrib \
@@ -157,9 +161,9 @@
   wget http://postgis.refractions.net/download/postgis-1.5.3.tar.gz
 
   CC="gcc -m64" CXX="g++ -m64" ./configure \
-    --with-pgconfig=/usr/postgres/opengeo-8.4/bin/64/pg_config \
-    --with-geosconfig=/usr/postgres/opengeo-8.4/bin/64/geos-config \
-    --with-projdir=/usr/postgres/opengeo-8.4 \
+    --with-pgconfig=/usr/postgres/opengeo-${PGVER}/bin/64/pg_config \
+    --with-geosconfig=/usr/postgres/opengeo-${PGVER}/bin/64/geos-config \
+    --with-projdir=/usr/postgres/opengeo-${PGVER} \
     --with-xml2config=/usr/bin/xml2-config \
     && make clean all \
     && make install
@@ -168,9 +172,9 @@
 # Build PostGIS (32)
 
   CC="gcc" CXX="g++" ./configure \
-    --with-pgconfig=/usr/postgres/opengeo-8.4/bin/pg_config \
-    --with-geosconfig=/usr/postgres/opengeo-8.4/bin/geos-config \
-    --with-projdir=/usr/postgres/opengeo-8.4 \
+    --with-pgconfig=/usr/postgres/opengeo-${PGVER}/bin/pg_config \
+    --with-geosconfig=/usr/postgres/opengeo-${PGVER}/bin/geos-config \
+    --with-projdir=/usr/postgres/opengeo-${PGVER} \
     --with-xml2config=/usr/bin/xml2-config \
     && make clean all \
     && make install
@@ -182,20 +186,20 @@ wget http://curl.haxx.se/download/curl-7.23.1.tar.gz
 
 # 32 BIT
 CC="gcc" CXX="g++" ./configure \
-   --prefix=/usr/postgres/opengeo-8.4 \
+   --prefix=/usr/postgres/opengeo-${PGVER} \
   && make clean all install
 
 # 64 BIT
 CC="gcc -m64" CXX="g++ -m64" ./configure \
-   --prefix=/usr/postgres/opengeo-8.4 \
-   --exec-prefix=/usr/postgres/opengeo-8.4 \
-   --bindir=/usr/postgres/opengeo-8.4/bin \
-   --libexecdir=/usr/postgres/opengeo-8.4/bin \
-   --sbindir=/usr/postgres/opengeo-8.4/bin \
-   --datadir=/usr/postgres/opengeo-8.4/share \
-   --sysconfdir=/usr/postgres/opengeo-8.4/etc \
-   --mandir=/usr/postgres/opengeo-8.4/man \
-   --libdir=/usr/postgres/opengeo-8.4/lib \
+   --prefix=/usr/postgres/opengeo-${PGVER} \
+   --exec-prefix=/usr/postgres/opengeo-${PGVER} \
+   --bindir=/usr/postgres/opengeo-${PGVER}/bin \
+   --libexecdir=/usr/postgres/opengeo-${PGVER}/bin \
+   --sbindir=/usr/postgres/opengeo-${PGVER}/bin \
+   --datadir=/usr/postgres/opengeo-${PGVER}/share \
+   --sysconfdir=/usr/postgres/opengeo-${PGVER}/etc \
+   --mandir=/usr/postgres/opengeo-${PGVER}/man \
+   --libdir=/usr/postgres/opengeo-${PGVER}/lib \
   && make clean all install
 
 
@@ -205,33 +209,33 @@ CC="gcc -m64" CXX="g++ -m64" ./configure \
   wget http://download.osgeo.org/gdal/gdal-1.8.1.tar.gz
 
   CC="gcc" CXX="g++" ./configure \
-   --prefix=/usr/postgres/opengeo-8.4 \
-   --with-curl=/usr/postgres/opengeo-8.4/bin/curl-config \
+   --prefix=/usr/postgres/opengeo-${PGVER} \
+   --with-curl=/usr/postgres/opengeo-${PGVER}/bin/curl-config \
    --with-expat-include=/usr/sfw/include \
    --with-expat-lib="-L/usr/sfw/lib" \
-   --with-geos=/usr/postgres/opengeo-8.4/bin/geos-config \
-   --with-pg=/usr/postgres/opengeo-8.4/bin/pg_config 
+   --with-geos=/usr/postgres/opengeo-${PGVER}/bin/geos-config \
+   --with-pg=/usr/postgres/opengeo-${PGVER}/bin/pg_config 
 
 # edit GDALmake.opt, uncomment SHELL variable
 
   make clean all install
 
   CC="gcc -m64" CXX="g++ -m64" ./configure \
-   --prefix=/usr/postgres/opengeo-8.4 \
-   --exec-prefix=/usr/postgres/opengeo-8.4 \
-   --bindir=/usr/postgres/opengeo-8.4/bin/64 \
-   --libexecdir=/usr/postgres/opengeo-8.4/bin/64 \
-   --sbindir=/usr/postgres/opengeo-8.4/bin/64 \
-   --datadir=/usr/postgres/opengeo-8.4/share \
-   --sysconfdir=/usr/postgres/opengeo-8.4/etc \
-   --mandir=/usr/postgres/opengeo-8.4/man \
-   --libdir=/usr/postgres/opengeo-8.4/lib/64 \
+   --prefix=/usr/postgres/opengeo-${PGVER} \
+   --exec-prefix=/usr/postgres/opengeo-${PGVER} \
+   --bindir=/usr/postgres/opengeo-${PGVER}/bin/64 \
+   --libexecdir=/usr/postgres/opengeo-${PGVER}/bin/64 \
+   --sbindir=/usr/postgres/opengeo-${PGVER}/bin/64 \
+   --datadir=/usr/postgres/opengeo-${PGVER}/share \
+   --sysconfdir=/usr/postgres/opengeo-${PGVER}/etc \
+   --mandir=/usr/postgres/opengeo-${PGVER}/man \
+   --libdir=/usr/postgres/opengeo-${PGVER}/lib/64 \
    --with-expat-inc=/usr/sfw/include \
    --with-expat-lib="-L/usr/sfw/lib/64" \
-   --with-geos=/usr/postgres/opengeo-8.4/bin/64/geos-config \
-   --with-pg=/usr/postgres/opengeo-8.4/bin/64/pg_config 
+   --with-geos=/usr/postgres/opengeo-${PGVER}/bin/64/geos-config \
+   --with-pg=/usr/postgres/opengeo-${PGVER}/bin/64/pg_config 
 
-#   --with-curl=/usr/postgres/opengeo-8.4/bin/64/curl-config \
+#   --with-curl=/usr/postgres/opengeo-${PGVER}/bin/64/curl-config \
 
 # edit GDALmake.opt, uncomment SHELL variable
 # edit GDALmake.opt change /usr/sfw/lib to /usr/sfw/lib/64
@@ -253,23 +257,23 @@ wget http://blogs.sun.com/ali/resource/rpath.tgz
 # untar and build it
 
 # 32 bit lib
-find /usr/postgres/opengeo-8.4/bin -type f -exec ./rpath {} /lib:/usr/lib:/usr/sfw/lib:\$ORIGIN/../lib ';'
+find /usr/postgres/opengeo-${PGVER}/bin -type f -exec ./rpath {} /lib:/usr/lib:/usr/sfw/lib:\$ORIGIN/../lib ';'
 
 # 32 bit bin
-find /usr/postgres/opengeo-8.4/lib -type f -exec ./rpath {} /lib:/usr/lib:/usr/sfw/lib:\$ORIGIN/../lib ';'
+find /usr/postgres/opengeo-${PGVER}/lib -type f -exec ./rpath {} /lib:/usr/lib:/usr/sfw/lib:\$ORIGIN/../lib ';'
 
 # 64 bit lib
-find /usr/postgres/opengeo-8.4/lib/64 -type f -exec ./rpath {} /lib/64:/usr/lib/64:/usr/sfw/lib/64:\$ORIGIN/../../lib/64 ';'
+find /usr/postgres/opengeo-${PGVER}/lib/64 -type f -exec ./rpath {} /lib/64:/usr/lib/64:/usr/sfw/lib/64:\$ORIGIN/../../lib/64 ';'
 
 # 64 bit bin
-find /usr/postgres/opengeo-8.4/bin/64 -type f -exec ./rpath {} /lib/64:/usr/lib/64:/usr/sfw/lib/64:\$ORIGIN/../../lib/64 ';'
+find /usr/postgres/opengeo-${PGVER}/bin/64 -type f -exec ./rpath {} /lib/64:/usr/lib/64:/usr/sfw/lib/64:\$ORIGIN/../../lib/64 ';'
 
 
 
 ###############################################################
 # Initialization
 
-cd /usr/postgres/opengeo-8.4/etc/smf
+cd /usr/postgres/opengeo-${PGVER}/etc/smf
 Copy postgres_og84 to /lib/svc/method
 Copy postgresql_og84.xml to /var/svn/manifest/application/database
 cd /var/svn/manifest/application/database
@@ -280,11 +284,11 @@ svcs postgresql_og84
 ###############################################################
 # Template PostGIS
 
-add /usr/postgres/opengeo-8.4/bin/64 to your PATH
+add /usr/postgres/opengeo-${PGVER}/bin/64 to your PATH
 createdb -U postgres template_postgis
 createlang -U postgres -d template_postgis plpgsql
-psql -U postgres -f /usr/postgres/opengeo-8.4/share/contrib/postgis-1.5/postgis.sql -d template_postgis
-psql -U postgres -f /usr/postgres/opengeo-8.4/share/contrib/postgis-1.5/spatial_ref_sys.sql -d template_postgis
+psql -U postgres -f /usr/postgres/opengeo-${PGVER}/share/contrib/postgis-1.5/postgis.sql -d template_postgis
+psql -U postgres -f /usr/postgres/opengeo-${PGVER}/share/contrib/postgis-1.5/spatial_ref_sys.sql -d template_postgis
 psql -U postgres -d template_postgis -c "update pg_database set datistemplate = true where datname = 'template_postgis'"
 
 ###############################################################
@@ -317,7 +321,7 @@ install-opengeo-postgis \
 # For Solaris 10u10 and up, use the rpath re-write trick
 # above.
 
-crle -u -l /usr/postgres/opengeo-8.4/lib
-crle -64 -u -l /usr/postgres/opengeo-8.4/lib/64
+crle -u -l /usr/postgres/opengeo-${PGVER}/lib
+crle -64 -u -l /usr/postgres/opengeo-${PGVER}/lib/64
 
 
