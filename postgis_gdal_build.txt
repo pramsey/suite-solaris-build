@@ -14,6 +14,9 @@
 # Add 'ar' to path
   export PATH=${PATH}:/usr/ccs/bin
 
+# Set up OpenCSW
+  http://www.opencsw.org/manual/for-administrators/getting-started.html
+
 # Alias for gmake to make
   cd /usr/swf/bin
   ln -s gmake make
