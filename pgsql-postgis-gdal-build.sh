@@ -25,8 +25,11 @@ chown $BUILDUSER:other /usr/postgres/opengeo-${PGVER}
 # http://www.opencsw.org/manual/for-administrators/getting-started.html
 pkgadd -d http://get.opencsw.org/now
 
-# Install Git using OpenCSW
-/opt/csw/bin/pkgutil -y -i git
+# For development...
+# install Git/Autotools/Gdb using OpenCSW
+/opt/csw/bin/pkgutil -y -i git 
+/opt/csw/bin/pkgutil -y -i automake autoconf libtool 
+/opt/csw/bin/pkgutil -y -i gdb
 
 # Alias for gmake to make
 cd /usr/swf/bin
@@ -155,7 +158,7 @@ cd postgresql-$PGVERFULL
 # Build PostgreSQL (32)
 
 export LD_OPTIONS=-R\$ORIGIN/../lib
-CC="gcc -m32" CXX="g++" LIBS="-lrt" ./configure \
+CC="gcc -m32" CXX="g++" LIBS="-lrt -lstdc++" ./configure \
   --prefix=/usr/postgres/opengeo-${PGVER} \
   --with-system-tzdata=/usr/share/lib/zoneinfo \
   --localstatedir=/var/postgres/opengeo-${PGVER} \
@@ -177,8 +180,12 @@ CC="gcc -m32" CXX="g++" LIBS="-lrt" ./configure \
 ###############################################################
 # Build PostgreSQL (64)
 
+# the LIBS line adds librt for threading support and 
+# libstdc++ so that the postgres process can properly catch
+# exceptions tossed by libgeos (just like in the old days)
+
 export LD_OPTIONS=-R\$ORIGIN/../../lib/64
-CC="gcc -m64" CXX="g++ -m64" LIBS="-lrt" ./configure \
+CC="gcc -m64" CXX="g++ -m64" LIBS="-lrt -lstdc++" ./configure \
   --prefix=/usr/postgres/opengeo-${PGVER} \
   --exec-prefix=/usr/postgres/opengeo-${PGVER} \
   --bindir=/usr/postgres/opengeo-${PGVER}/bin/64 \
@@ -279,28 +286,75 @@ CC="gcc -m64" CXX="g++ -m64" ./configure \
 # STOP, manually edit GDALmake.opt change /usr/sfw/lib to /usr/sfw/lib/64
 make clean all install
 
-  
 ###############################################################
-# Build PostGIS
+# Build JSON-C
 
-wget http://postgis.refractions.net/download/postgis-1.5.3.tar.gz
+cd $HOME/Code
+wget --no-check-certificate https://github.com/json-c/json-c/archive/json-c-0.11-20130402.tar.gz
+gtar xvfz json-c-0.11-20130402.tar.gz
+cd json-c-json-c-0.11-20130402
+
+# 32 BIT
+export LD_OPTIONS=-R\$ORIGIN/../lib
+CC="gcc -m32" ./configure --prefix=/usr/postgres/opengeo-${PGVER} \
+&& make clean all \
+&& make install
+
+# 64 bit
+export LD_OPTIONS=-R\$ORIGIN/../../lib/64
+CC="gcc -m64" ./configure \
+  --libdir=/usr/postgres/opengeo-${PGVER}/lib/64 \
+  --infodir=/usr/postgres/opengeo-${PGVER}/info/ \
+  --mandir=/usr/postgres/opengeo-${PGVER}/man/ \
+  --includedir=/usr/postgres/opengeo-${PGVER}/include/64 \
+&& make clean all \
+&& make install
+
+
+###############################################################
+# Get PostGIS
+
+cd $HOME/Code
+wget http://download.osgeo.org/postgis/source/postgis-2.1.3.tar.gz
+gtar xvfz postgis-2.1.3.tar.gz
+cd postgis-2.1.3
+
+###############################################################
+# Patch PostGIS
+# We have to patch PostGIS to build, up oh. 
+# - Solaris missing the isfinite() function is a problem
+#   (worse, it seems to have a header macro for it, but 
+#   doesn't have a library symbol for it, huh?)
+# - Solaris layout of 64bit libraries requires configure to be
+#   patched to find them in their ./64/ sub directories rather
+#   than under a common prefix
   
 # 32 BIT
 export LD_OPTIONS=-R\$ORIGIN/../lib
-CC="gcc -m32" CXX="g++ -m32" ./configure \
+CC="gcc -m32" CXX="g++ -m32" LDFLAGS="-lm" ./configure \
+  --prefix=/usr/postgres/opengeo-${PGVER} \
   --with-pgconfig=/usr/postgres/opengeo-${PGVER}/bin/pg_config \
   --with-geosconfig=/usr/postgres/opengeo-${PGVER}/bin/geos-config \
+  --with-gdalconfig=/usr/postgres/opengeo-${PGVER}/bin/gdal-config \
   --with-projdir=/usr/postgres/opengeo-${PGVER} \
+  --with-jsondir=/usr/postgres/opengeo-${PGVER} \
   --with-xml2config=/usr/bin/xml2-config \
   && make clean all \
   && make install
   
 # 64 BIT
 export LD_OPTIONS=-R\$ORIGIN/../../lib/64
-CC="gcc -m64" CXX="g++ -m64" ./configure \
+CC="gcc -m64" CXX="g++ -m64" LDFLAGS="-lm" ./configure \
+  --prefix=/usr/postgres/opengeo-${PGVER} \
+  --libdir=/usr/postgres/opengeo-${PGVER}/lib/64 \
+  --includedir=/usr/postgres/opengeo-${PGVER}/include/64 \
   --with-pgconfig=/usr/postgres/opengeo-${PGVER}/bin/64/pg_config \
   --with-geosconfig=/usr/postgres/opengeo-${PGVER}/bin/64/geos-config \
-  --with-projdir=/usr/postgres/opengeo-${PGVER} \
+  --with-gdalconfig=/usr/postgres/opengeo-${PGVER}/bin/64/gdal-config \
+  --with-projincludedir=/usr/postgres/opengeo-${PGVER}/include/64 \
+  --with-projlibdir=/usr/postgres/opengeo-${PGVER}/lib/64 \
+  --with-jsonincludedir=/usr/postgres/opengeo-${PGVER}/include/64 \
+  --with-jsonlibdir=/usr/postgres/opengeo-${PGVER}/lib/64 \
   --with-xml2config=/usr/bin/xml2-config \
   && make clean all \
   && make install
